@@ -1,0 +1,18 @@
+module game_moveplayerpos (
+    input btnpress[2]; //2bit button input. TODO: write a module that converts player button inputs to a 2-bit input for this input
+    input currentpos[9]; //9bit one-hot input for player current position.
+    
+    output newpos[9]; //9bit one-hot output for player current position
+  ) {
+
+  always {
+    case (btnpress){
+      b00: // button equivalent of left
+      //TODO: finish this shit
+      
+      
+      
+      
+      }
+  }
+}
