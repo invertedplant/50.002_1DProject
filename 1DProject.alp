@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="1DProject" board="Alchitry Au" language="Lucid" version="3">
+  <files>
+    <src>seven_seg.luc</src>
+    <src>boolean.luc</src>
+    <component>counter.luc</component>
+    <src>alu.luc</src>
+    <src>shifter.luc</src>
+    <component>decoder.luc</component>
+    <component>pipeline.luc</component>
+    <component>reset_conditioner.luc</component>
+    <src>arithmetic.luc</src>
+    <src top="true">au_top.luc</src>
+    <src>compare.luc</src>
+    <component>button_conditioner.luc</component>
+    <src>multi_seven_seg.luc</src>
+    <src>debouncer.luc</src>
+    <constraint lib="true">alchitry.acf</constraint>
+    <constraint lib="true">au.xdc</constraint>
+    <constraint>io.acf</constraint>
+  </files>
+</project>

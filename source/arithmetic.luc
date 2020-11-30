@@ -14,6 +14,7 @@ module arithmetic (
 
   sig tmp[16]; // we might want to do things to the value before passing it to result
   sig xb[16];
+  sig tmp2[32];
   
   always {
   case(alufnMath){
@@ -33,8 +34,10 @@ module arithmetic (
       // overflow check
         
       b10: // alufn code to multiply
-      tmp = a * b; // stores only the low-order 16 bits 
-      v = b0; // no overflow in multiplication
+      tmp = a * b; // stores only the low-order 16 bits
+      tmp2 = a * b;   
+      v = |tmp2[31:16]; // proper overflow check
+      
         
       default: // for anything else
       tmp = 16b0; // no result
