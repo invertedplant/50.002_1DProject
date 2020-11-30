@@ -1,0 +1,78 @@
+module alu (
+    // here's what you can put into the ALU: a, b and the 6bit alufn code
+    input a[16],
+    input b[16],
+    input alufn[6],
+    /* this 6 bit input is slightly different from SW Lab 3 - read the modules */
+    
+    // you can get a 16-bit result, and 1-bit signals z v and n.
+    output result[16],
+    output z,
+    output v,
+    output n
+  ) {
+  
+  // let's instantiate all other modules that we might use in the ALU
+  arithmetic math; // also has a nifty multiplying function
+  arithmetic math2; // for working out z v and n
+  boolean boole; // has a couple additional functions not in SW Lab 3
+  shifter shift; // has SLA because it's easy to do it in Lucid
+  compare comp;
+
+  
+  always {
+    // Some of the other outputs rely on the arithmetic function, so we'll do that first, taking in alufn [1:0]
+    math.a = a;
+    math.b = b;
+    math.alufnMath = alufn[1:0]; // can do add, subtract or multiply
+    z = math.z; // although these values lose a fair bit of meaning when doing multiply
+    v = math.v;
+    n = math.n;
+    
+    // if we're doing multiply or add we won't get appropriate values for z v and n to do comparison
+    math2.a = a;
+    math2.b = b;
+    math2.alufnMath = b01; // force a subtraction to use for compare
+    
+    // now we can do comparisons based on the values of alufn[2:1]
+    comp.z = math2.z;
+    comp.v = math2.v;
+    comp.n = math2.n;
+    comp.alufnCompare = alufn[2:1];
+    
+    // if we're doing boolean logic, we need to take in alufn[3:0]
+    boole.a = a;
+    boole.b = b;
+    boole.alufnBoole = alufn[3:0];
+    
+    // shifter takes in alufn[1:0] to choose which shift to do
+    shift.a = a;
+    shift.b = b;
+    shift.alufnShift = alufn[1:0];
+    
+    // now we can choose which result to return based on ALUFN [5:4], like in SW Lab 3
+    case(alufn[5:4]){
+    // 00 uses the arithmetic module
+      b00:
+      result = math.result;
+        
+    // 01 uses the boolean module
+      b01:
+      result = boole.result;
+        
+    // 10 uses the shifter module
+      b10:
+      result = shift.result;
+        
+    // 11 uses the compare module;
+      b11:
+      result = comp.result;
+    // this should never happen
+      default:
+      result = 16b0;  
+    }
+    
+    
+    
+  }
+}

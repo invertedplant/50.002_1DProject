@@ -1,0 +1,43 @@
+module boolean (
+    input a[16],
+    input b[16],
+    input alufnBoole[4], //allows us to put in other possibly useful boolean operations
+    /*
+    This module does NOT follow SW Lab 3's boolean design. Here be dragons.
+    This takes in ALUFN[3:0] and performs operations based on that.
+    */
+    output result[16]
+    
+  ) {
+
+  sig tmp[16];
+  
+  always {
+    case(alufnBoole){
+      b0000: // bitwise or
+      tmp = a | b;
+      b0001: // bitwise and
+      tmp = a & b;
+      b0010: // bitwise xor 
+      tmp = a ^ b;
+      b0011: // pass value "a" 
+      tmp = a; 
+      b0100: // pass value "b"
+      tmp = b;
+      b1000: // bitwise nor
+      tmp = ~(a | b);
+      b1001: // bitwise nand
+      tmp = ~(a & b);
+      b1010: // bitwise xnor
+      tmp = a ~^ b;
+      b1011: // pass value "not a"
+      tmp = ~a;
+      b1100: // pass value "not b"
+      tmp = ~b;              
+      default: // anything else not in here       
+      tmp = 16b0; // just return 0
+    }
+    
+    result = tmp;
+  }
+}

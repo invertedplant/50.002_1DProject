@@ -1,0 +1,50 @@
+module arithmetic (
+    input a[16], // 16 bit input a
+    input b[16], // 16 bit input b
+    input alufnMath[2], // 2 bits input ALUFN, determine which operation to do
+    /*
+    This module closely follows that of SW Lab 3
+    */          
+    output result[16], // 16 bit output of whatever operation
+    output z,
+    output v,
+    output n
+    
+  ) {
+
+  sig tmp[16]; // we might want to do things to the value before passing it to result
+  sig xb[16];
+  
+  always {
+  case(alufnMath){
+    
+      //calculate xb to use in calculating b
+      
+      b00: // alufn code to add
+      tmp = $signed(a) + $signed(b);
+      xb = b;
+      v = ((a[15] & xb[15] & (~tmp[15])) | ((~a[15]) & (~xb[15]) & tmp[15]));
+      // overflow check
+        
+      b01: // alufn code to subtract
+      tmp = $signed(a) - $signed(b);
+      xb = 0 - b;   
+      v = ((a[15] & xb[15] & (~tmp[15])) | ((~a[15]) & (~xb[15]) & tmp[15]));
+      // overflow check
+        
+      b10: // alufn code to multiply
+      tmp = a * b; // stores only the low-order 16 bits 
+      v = b0; // no overflow in multiplication
+        
+      default: // for anything else
+      tmp = 16b0; // no result
+      v = b0; // no overflow     
+      }
+    // now that we have tmp, we can work out the remaining output values
+    
+    n = tmp[15]; // msb is 1, result is a negative number (may not work good for multiplication)
+    z = ~|tmp; // NOR reduction to check if result is zero
+    
+    result = tmp;
+  }
+}
