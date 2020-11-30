@@ -1,10 +1,4 @@
-//TODO: finish support for BR board I/O.
-//Player 1 buttons in LRUD order
-pin p1button[0] C39;
-pin
-
-
-//below lies a slightly modified version of the constraints from the original alchitry.acf and io.acf, for final project use. make sure that the original alchitry
+//below lies a stripped version of the constraints from the original alchitry.acf and io.acf, for final project use. make sure that the original alchitry
 //and io acf files are NOT present in the final project, or else it will cause errors. 
 
 pin clk CLOCK;
@@ -12,15 +6,103 @@ clock clk 100MHz;
 
 pin rst_n RESET;
 
-pin led[0] LED0;
-pin led[1] LED1;
-pin led[2] LED2;
-pin led[3] LED3;
-pin led[4] LED4;
-pin led[5] LED5;
-pin led[6] LED6;
-pin led[7] LED7;
+pin io_sel[0] A9;
+pin io_sel[1] A8;
+pin io_sel[2] A12;
+pin io_sel[3] A11;
+
+pin io_seg[0] A5;
+pin io_seg[1] A6;
+pin io_seg[2] A14;
+pin io_seg[3] A15;
+pin io_seg[4] A17;
+pin io_seg[5] A3;
+pin io_seg[6] A2;
+pin io_seg[7] A20;
 
 // flip the Tx/Rx lines
 pin usb_rx USB_TX;
 pin usb_tx USB_RX;
+
+//TODO: finish support for BR board I/O.
+//Player 1 INPUT buttons in LRUD + COMMIT order 
+pin p1button[0] A39 pulldown;
+pin p1button[1] A42 pulldown;
+pin p1button[2] A45 pulldown;
+pin p1button[3] A48 pulldown;
+pin p1button[4] A36 pulldown;
+
+//Player 2 INPUT buttons in LRUD + COMMIT order
+pin p2button[0] A40 pulldown;
+pin p2button[1] A43 pulldown;
+pin p2button[2] A46 pulldown;
+pin p2button[3] A49 pulldown;
+pin p2button[4] A37 pulldown;
+
+//Player 1 and Player 2 OUTPUT win LEDs
+pin p1win_led A33;
+pin p2win_led A34;
+
+//Pre-defined patterns OUTPUT
+pin pattern[0] A27;
+pin pattern[1] A30;
+pin pattern[2] A33;
+pin pattern[3] A28;
+pin pattern[4] A31;
+pin pattern[5] A34;
+pin pattern[6] A24;
+pin pattern[7] A21;
+pin pattern[8] A18;
+
+//Player 1 pos and patterns OUTPUT;
+//This would've been easier on a matrix board tbh. I wouldn't have to write every darn pin manually. At least I'm not the one wiring this.
+pin p1pos[0] B42;
+pin p1pos[1] B45;
+pin p1pos[2] B48;
+pin p1pos[3] B43;
+pin p1pos[4] B46;
+pin p1pos[5] B49;
+pin p1pos[6] B9;
+pin p1pos[7] B6;
+pin p1pos[8] B3;
+
+// leaving the pattern and pos one spot apart to make wiring easier
+
+pin p1pattern[0] B30;
+pin p1pattern[1] B33;
+pin p1pattern[2] B36;
+pin p1pattern[3] B31;
+pin p1pattern[4] B34;
+pin p1pattern[5] B37;
+pin p1pattern[6] B21;
+pin p1pattern[7] B18;
+pin p1pattern[8] B15;
+
+//Player 2 pos and patterns OUTPUT;
+pin p2pos[0] C43;
+pin p2pos[1] C46;
+pin p2pos[2] C49;
+pin p2pos[3] C42;
+pin p2pos[4] C45;
+pin p2pos[5] C48;
+pin p2pos[6] C8;
+pin p2pos[7] C5;
+pin p2pos[8] C2;
+
+// lord save us all
+pin p2pattern[0] C31;
+pin p2pattern[1] C34;
+pin p2pattern[2] C37;
+pin p2pattern[3] C30;
+pin p2pattern[4] C33;
+pin p2pattern[5] C36;
+pin p2pattern[6] C20;
+pin p2pattern[7] C19;
+pin p2pattern[8] C18;
+
+
+
+
+
+
+
