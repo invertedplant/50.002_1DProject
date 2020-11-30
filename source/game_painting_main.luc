@@ -61,6 +61,9 @@ module game_painting_main (
       
       BRANCH_P1_PATTERN_MATCH,
       
+      
+      STOP_P1_TIME,
+      
       CHECK_P2_PATTERN_MATCH_1,
       CHECK_P2_PATTERN_MATCH_2,
       CHECK_P2_PATTERN_MATCH_3,
@@ -68,7 +71,8 @@ module game_painting_main (
       CHECK_P2_PATTERN_MATCH_5,
       
       BRANCH_P2_PATTERN_MATCH,
-     
+      
+      STOP_P2_TIME,
       
       CHECK_GAMEFINISH,
       CHECK_FINAL_WINNER,
@@ -476,8 +480,29 @@ module game_painting_main (
           game_fsm.d = game_fsm.CHECK_ROUND_WINNER; //check who is the round winner
           
           
-      //OURS: RESET_BOARD_TIME
-          
+      //OURS: RESET_BOARD_TIME, to reset after each round ends and after adding scores
+      game_fsm.RESET_BOARD_TIME:    //
+        regfile_read_address_b = b1111; //temp reg where we store the value of CMPLT of the times
+        if (regfile_datain[0]){ //if this statement is TRUE, means player 2 FINISHES first
+            //Award points to player 2
+            alufn = b000001; //SUB FUNCTION
+            regfile_read_address_a = b0001; //register for p2 time
+            asel = b00; //asel = output of a
+            bsel = b001; //bsel = output of bsel mux is the constant 1, which is also used to shift right, so decrease p2time by 1 to reset it
+            we_regfile = 1;
+            regfile_write_address = b0001; //write back to round counter register
+            game_fsm.d = game_fsm.IDLE; 
+          }
+        else{ //p1 finishes faster than p2
+            //Award points to player 1
+            alufn = b000001; //SUB FUNCTION
+            regfile_read_address_a = b0000; //register for p1 time
+            asel = b00; //asel = output of a
+            bsel = b001; //bsel = output of bsel mux is the constant 1, which is also used to shift right, so decrease p2time by 1 to reset it
+            we_regfile = 1;
+            regfile_write_address = b0000; //write back to round counter register
+            game_fsm.d = game_fsm.IDLE; 
+          }
           
       //BRANCH NEXT ROUND TO FIND OUT WHAT ROUND NUMBER THE NEXT ROUND IS
       //game_fsm.BRANCH_NEXTROUND:
@@ -534,7 +559,7 @@ module game_painting_main (
          bsel = b001;                                //B = 1
          we_regfile = 1;                           
          regfile_write_address = b0010;                   //place back to P1 score reg
-         game_fsm.d = game_fsm.INCREASE_P1BUTTONCOUNT;
+         game_fsm.d = game_fsm.RESET_BOARD_TIME;
           
       //increases p2 score
       game_fsm.INCREASE_P2SCORE:
@@ -545,7 +570,7 @@ module game_painting_main (
         bsel = b001;                               //B = 1
         we_regfile = 1; 
         regfile_write_address = b0001;                 //place back tot P2 score reg
-        game_fsm.d = game_fsm.INCREASE_P2BUTTONCOUNT;  
+        game_fsm.d = game_fsm.RESET_BOARD_TIME;  
           
       //--------------------------------------------------------------------------------------------------------------------------------------------
           
