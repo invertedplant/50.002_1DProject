@@ -1,0 +1,127 @@
+//REGFILES
+module game_regfiles (
+    input clk,  // clock
+    input rst,  // reset
+    input write_address[4], // write address
+    input we, // write enable
+    input data[16], // data in
+    
+    
+    input read_address_a[4], //address port a 
+    input read_address_b[4], //address port b
+    output out_a[16], //read port a
+    output out_b[16], //read port b
+    
+    //debug
+    //output out[16],
+    output all_time[32],
+    output all_scores[32],
+    output all_buttons[4],
+    output counter_out[16]
+
+  ) 
+
+{
+  .clk(clk){
+    .rst(rst){
+      dff register_p1_time[16];
+      dff register_p2_time[16];
+      dff register_p1_score[16]; //register for player 1 score
+      dff register_p2_score[16]; //register for player 2 score
+      dff register_p1_led_pattern[9]; //register for player 1 led board
+      dff register_p2_led_pattern[9]; //register for player 2 led board
+      dff register_central_led_pattern[9]; //register for main central screen
+      dff register_round_counter[16];
+      dff register_p1_cursor_pos[9];
+      dff register_p2_cursor_pos[9];
+      dff register_central_led_pattern2[9]; //round 2 pattern
+      dff register_central_led_pattern3[9]; //round 3 pattern
+      dff register_central_led_pattern4[9]; //round 4 pattern
+      dff register_central_led_pattern5[9]; //round 5 pattern
+      //add two extra registers
+      dff register_p1_buttonPress[16]; //player 1 button press
+      dff register_p2_buttonPress[16]; //player 2 button press
+      //may be used temporary variable
+      //dff temp_var[16];
+    }
+  }
+
+  always {
+  
+    //write port
+    if (we){
+      case(write_address){
+        b0000 : register_p1_time.d = data;
+        b0001 : register_p2_time.d = data;
+        b0010 : register_p1_score.d = data;
+        b0011 : register_p2_score.d = data; //register 3
+        b0100 : register_p1_led_pattern.d = data; //register 4
+        b0101 : register_p2_led_pattern.d = data;
+        b0110 : register_central_led_pattern.d = data;
+        b0111 : register_round_counter.d = data;
+        b1000 : register_p1_cursor_pos.d = data;
+        b1001 : register_p2_cursor_pos.d = data;
+        b1010 : register_central_led_pattern2.d = data;
+        b1011 : register_central_led_pattern3.d = data;
+        b1100 : register_central_led_pattern4.d = data;
+        b1101 : register_central_led_pattern5.d = data;
+        b1110 : register_p1_buttonPress.d = data;
+        b1111 : register_p2_buttonPress.d = data;
+      }
+    }
+    
+      
+    //read port a
+    case(read_address_a){
+        b0000 : out_a = register_p1_time.q;
+        b0001 : out_a = register_p2_time.q;
+        b0010 : out_a = register_p1_score.q;
+        b0011 : out_a = register_p2_score.q; //register 3
+        b0100 : out_a = register_p1_led_pattern.q; //register 4
+        b0101 : out_a = register_p2_led_pattern.q;
+        b0110 : out_a = register_central_led_pattern.q;
+        b0111 : out_a = register_round_counter.q;
+        b1000 : out_a = register_p1_cursor_pos.q;
+        b1001 : out_a = register_p2_cursor_pos.q;
+        b1010 : out_a = register_central_led_pattern2.q;
+        b1011 : out_a = register_central_led_pattern3.q;
+        b1100 : out_a = register_central_led_pattern4.q;
+        b1101 : out_a = register_central_led_pattern5.q;
+        b1110 : out_a = register_p1_buttonPress.q;
+        b1111 : out_a = register_p2_buttonPress.q;
+        default : out_a = 0;
+    }
+    
+    //read port b
+    case(read_address_b){
+        b0000 : out_b = register_p1_time.q;
+        b0001 : out_b = register_p2_time.q;
+        b0010 : out_b = register_p1_score.q;
+        b0011 : out_b = register_p2_score.q; //register 3
+        b0100 : out_b = register_p1_led_pattern.q; //register 4
+        b0101 : out_b = register_p2_led_pattern.q;
+        b0110 : out_b = register_central_led_pattern.q;
+        b0111 : out_b = register_round_counter.q;
+        b1000 : out_b = register_p1_cursor_pos.q;
+        b1001 : out_b = register_p2_cursor_pos.q;
+        b1010 : out_b = register_central_led_pattern2.q;
+        b1011 : out_b = register_central_led_pattern3.q;
+        b1100 : out_b = register_central_led_pattern4.q;
+        b1101 : out_b = register_central_led_pattern5.q;
+        b1110 : out_b = register_p1_buttonPress.q;
+        b1111 : out_b = register_p2_buttonPress.q;
+        default : out_b = 0;
+    }
+      
+    
+    
+    //For debugging
+    all_scores[15:0] = register_p1_score.q;
+    all_scores[31:16] = register_p2_score.q;
+    all_buttons[1:0] = register_p1_buttonPress.q[1:0];
+    all_buttons[3:2] = register_p2_buttonPress.q[1:0];
+    all_time[15:0] = register_p1_time.q;
+    all_time[31:16] = register_p2_time.q;
+    counter_out = register_round_counter.q;
+  }
+}
