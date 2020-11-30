@@ -1,0 +1,32 @@
+module compare (
+    input z,
+    input v,
+    input n,
+    input alufnCompare[2], //2 bit input determining which comparison to use
+    /*
+    This module follows SW Lab 3 closely
+    */
+    output result[16]
+  ) {
+
+  sig tmp;
+  
+  always {
+    case(alufnCompare){
+    // follows lab 3 alufn input, compares a = b, a < b, a <= b
+      b01: //equals comparison
+      tmp = z;
+        
+      b10: //less than comparison
+      tmp = n ^ v;
+        
+      b11: //less than or equals to comparison
+      tmp = (n ^ v) | z;
+        
+      default: //invalid alufnCompare value
+      tmp = 0;
+    }
+    result[15:1] = 15b0; // higher order values all zero
+    result[0] = tmp;
+    
+}

@@ -1,0 +1,36 @@
+module shifter (
+    input a[16],
+    input b[16],
+    input alufnShift[2], // SL, SLA (?), SR, and SRA only needed in 2 bits
+    /*
+    This module follows SW Lab 3 closely. It shifts "a" based on the low-order
+    FOUR bits of "b", allowing for up to 15 bits of shifting. 
+    */
+    output result[16]
+  ) {
+
+  sig tmp[16];
+  
+  /*
+  EXR (<< / <<< / >> / >>>) num_bits is the equivalent of SL/SLA/SR/SRA
+  */
+  
+  always {
+    case(alufnShift){
+      b00: // equivalent to left shift unsigned 
+      tmp = a << b[3:0]; //using the low order four digits of b 
+      b01: // equivalent to right shift unsigned 
+      tmp = a >> b[3:0];
+      b10: // equivalent to left shift signed 
+      tmp = $signed(a) <<< b[3:0];
+      // $signed forces a to be treated as signed 
+      b11: // equivalent to right shift unsigned 
+      tmp = $signed(a) >>> b[3:0];
+      default: // if something goes wrong which it really shouldn't
+      tmp = 16b0;     
+      }
+    
+    result = tmp;
+    
+  }
+}
