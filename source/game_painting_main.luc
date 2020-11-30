@@ -336,18 +336,26 @@ module game_painting_main (
         game_fsm.d = game_fsm.BRANCH_P1_PATTERN_MATCH;
           
           
-      //OURS: BRANCH_P1_PATTERN_MATCH
+      //OURS: BRANCH_P1_PATTERN_MATCH, 
       game_fsm.BRANCH_P1_PATTERN_MATCH:
         regfile_read_address_b = b1111;      //temp reg
         if (regfile_datain[0]){ //If it is true that the player 1 pattern matches the current round pattern
           //go to check winner state, the game ends!
-          game_fsm.d = game_fsm.CHECK_GAMEFINISH;
+          game_fsm.d = game_fsm.STOP_P1_TIME; //adds 1 to player 1 timer register to indicate p1 has finished first
           }
         else{ //if round counter is not 5 yet
           game_fsm.d = game_fsm.IDLE;
           }
           
       //maybe stop player 1 time
+      game_fsm.STOP_P1_TIME:    //If content of P1 TIME is 1 means P1 has finished his or her pattern
+        alufn = b000000;                              //CMPEQ
+        regfile_read_address_a = b0000;              //p1 time register
+        asel = b00;                                  //uses read a
+        bsel = b001;                                   //read b
+        we_regfile = 1;
+        regfile_write_address = b0000;                     //temp reg
+        game_fsm.d = game_fsm.CHECK_ROUND_WINNER;
           
       //-----------------------------------------------------------------------------------------------------------------------------------
       //OURS:CHECK P2 PATTERN MATCH ROUND 1
@@ -389,7 +397,7 @@ module game_painting_main (
       //OURS:CHECK P2 PATTERN MATCH ROUND 4
       game_fsm.CHECK_P2_PATTERN_MATCH_4:
         alufn = b110011;                              //CMPEQ
-        regfile_read_address_a = b0101;              //p1 on screen pattern register
+        regfile_read_address_a = b0101;              //p2 on screen pattern register
         regfile_read_address_b = b1100;              //main central led configuration round 4
         asel = b00;                                  //uses read a
         bsel = b00;                                   //read b
@@ -401,7 +409,7 @@ module game_painting_main (
       //OURS:CHECK P2 PATTERN MATCH ROUND 5
       game_fsm.CHECK_P2_PATTERN_MATCH_5:
         alufn = b110011;                              //CMPEQ
-        regfile_read_address_a = b0101;              //p1 on screen pattern register
+        regfile_read_address_a = b0101;              //p2 on screen pattern register
         regfile_read_address_b = b1101;              //main central led configuration round 4
         asel = b00;                                  //uses read a
         bsel = b00;                                   //read b
@@ -410,16 +418,27 @@ module game_painting_main (
         game_fsm.d = game_fsm.BRANCH_P2_PATTERN_MATCH;
           
           
-      //OURS: BRANCH_P1_PATTERN_MATCH
       game_fsm.BRANCH_P2_PATTERN_MATCH:
         regfile_read_address_b = b1111;      //temp reg
         if (regfile_datain[0]){ //If it is true that the player 1 pattern matches the current round pattern
           //go to check winner state, the game ends!
-          game_fsm.d = game_fsm.CHECK_GAMEFINISH;
+          game_fsm.d = game_fsm.STOP_P2_TIME; //adds 1 to player 2 timer register to indicate p2 has finished first
           }
         else{ //if round counter is not 5 yet
           game_fsm.d = game_fsm.IDLE;
-          }    
+          }
+          
+      //maybe stop player 1 time
+      game_fsm.STOP_P2_TIME:    //If content of P2 TIME is 1 means P2 has finished his or her pattern
+        alufn = b000000;                              //CMPEQ
+        regfile_read_address_a = b0001;              //p2 time register
+        asel = b00;                                  //uses read a
+        bsel = b001;                                   //read b
+        we_regfile = 1;
+        regfile_write_address = b0001;                     //temp reg
+        game_fsm.d = game_fsm.CHECK_ROUND_WINNER; 
+          
+      //---------------------------------------------------------------------------------------------------------------------------------------
           
       
           
@@ -498,13 +517,13 @@ module game_painting_main (
       //BRANCH TO ROUND WINNER awards points
       game_fsm.BRANCH_ROUND_WINNER:
         regfile_read_address_b = b1111; //temp reg where we store the value of CMPLT of the times
-        if (regfile_datain[0]){ //if this statement is TRUE, means player 1 finish faster than p2
-            //Award points to player 1
-            game_fsm.d = game_fsm.INCREASE_P1SCORE; 
-          }
-        else{ //p2 finishes faster than p1
+        if (regfile_datain[0]){ //if this statement is TRUE, means player 2 FINISHES first
             //Award points to player 2
             game_fsm.d = game_fsm.INCREASE_P2SCORE; 
+          }
+        else{ //p1 finishes faster than p2
+            //Award points to player 1
+            game_fsm.d = game_fsm.INCREASE_P1SCORE; 
           }
           
       //INCREASES P1 score
@@ -527,6 +546,8 @@ module game_painting_main (
         we_regfile = 1; 
         regfile_write_address = b0001;                 //place back tot P2 score reg
         game_fsm.d = game_fsm.INCREASE_P2BUTTONCOUNT;  
+          
+      //--------------------------------------------------------------------------------------------------------------------------------------------
           
           
       //OURS: State to check who is the winner player 1 or player 2              
