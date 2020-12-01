@@ -5,7 +5,7 @@ module game_betacpu (
     input clk,  // clock
     input rst,  // reset
     
-    output debug_out[16],
+    //output debug_out[16], //uncomment when doing debugging
     output p1_out[16],
     output p2_out[16],
     output debug_slowclock,
