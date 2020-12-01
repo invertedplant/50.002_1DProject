@@ -1,22 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="1DProject" board="Alchitry Au" language="Lucid" version="3">
   <files>
-    <src>compare.luc</src>
-    <src>debouncer.luc</src>
     <src>multi_seven_seg.luc</src>
+    <src>game_regfiles.luc</src>
+    <src>game_painting_main.luc</src>
+    <src>compare.luc</src>
     <src>game_moveplayerpos.luc</src>
-    <component>counter.luc</component>
-    <src top="true">au_top.luc</src>
-    <src>arithmetic.luc</src>
     <src>alu.luc</src>
+    <src>variable_counter.luc</src>
+    <component>edge_detector.luc</component>
+    <src>arithmetic.luc</src>
+    <src>game_betacpu.luc</src>
+    <src>shifter.luc</src>
+    <component>counter.luc</component>
+    <src>debouncer.luc</src>
+    <component>pn_gen.luc</component>
+    <src>boolean.luc</src>
     <src>seven_seg.luc</src>
     <component>decoder.luc</component>
     <component>pipeline.luc</component>
     <component>reset_conditioner.luc</component>
-    <src>shifter.luc</src>
     <component>button_conditioner.luc</component>
-    <src>boolean.luc</src>
-    <constraint>aucustom.xdc</constraint>
+    <src top="true">au_top.luc</src>
     <constraint>iocustom.acf</constraint>
+    <constraint>aucustom.xdc</constraint>
   </files>
 </project>

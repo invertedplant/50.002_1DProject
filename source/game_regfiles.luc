@@ -55,7 +55,7 @@ module game_regfiles (
         b0001 : register_p2_time.d = data;
         b0010 : register_p1_score.d = data;
         b0011 : register_p2_score.d = data; //register 3
-        b0100 : register_p1_led_pattern.d = data; //register 4
+        b0100 : register_p1_led_pattern.d = data; //register 4 - should probably only assign lower bits of data[8:0] to avoid this warning 
         b0101 : register_p2_led_pattern.d = data;
         b0110 : register_central_led_pattern.d = data;
         b0111 : register_round_counter.d = data;
