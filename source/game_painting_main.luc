@@ -86,7 +86,14 @@ module game_painting_main (
       
       BRANCH_NEXTROUND,
       
-      RESET_BOARD_TIME
+      RESET_BOARD_TIME,
+      
+      P1_ON_BUTTON_PRESS,
+      P1_MOVE_POS,
+      P2_ON_BUTTON_PRESS,
+      P2_MOVE_POS,
+      P1_PAINT,
+      P2_PAINT
       };
     
   }
@@ -115,23 +122,28 @@ module game_painting_main (
     else{
       
     case(game_fsm.q){
-        game_fsm.START:
-    //TODO: set defaults
-          
-          
       game_fsm.START_SET_TIMER: 
-        alufn = b011010;                             //ADD
+        alufn = b000000;                             //ADD
         asel = b11;                                  //30
         we_regfile = 1; 
         regfile_write_address = b1000;                     //timer reg
         regfile_read_address_b = b1000;              //direct read (temp reg)
         //if counter is set
         if (regfile_datain[4]){                      //direct read in
-          game_fsm.d = game_fsm.INC_COUNTER;
+          game_fsm.d = game_fsm.START;
         }
         else{
           game_fsm.d =  game_fsm.START_SET_TIMER;
         }
+
+      game_fsm.START:
+        alufn = b000000; //ADD FUNCTION
+          regfile_read_address_a = b0111; //register for round counter 
+          asel = b00; //asel = output of a
+          bsel = b001; //bsel = output of bsel mux is the constant 1, which is also used to shift right
+          we_regfile = 1;
+          regfile_write_address = b0111; //write back to round counter register
+          game_fsm.d = game_fsm.ROUND_1_SET_PATTERN; //check who is the round winner
         
       game_fsm.INC_COUNTER:
         //set output and next state
@@ -162,7 +174,94 @@ module game_painting_main (
           game_fsm.d = game_fsm.IDLE;
         }
                
-      
+      //BUTTON PRESSES FOR EACH PLAYER
+      game_fsm.P1_ON_BUTTON_PRESS:
+        alufn = b000000; //ADD
+        regfile_read_address_a = b1110; //register for player 1 button press, different values for different presses
+        asel = b00;
+        bsel = b110; //bsel that is zero value 
+        we_regfile = 1;
+        regfile_write_address = b0001; //write to temp register
+        if(regfile_read_address_a == 4){
+          game_fsm.d = game_fsm.P1_PAINT;
+        }else{
+        game_fsm.d = game_fsm.P1_MOVE_POS; //move position state
+        }
+          
+      game_fsm.P1_MOVE_POS:
+        alufn = b000000; //ADD
+        regfile_read_address_a = b1000; //Register for p1 cursor position
+        asel = b00;
+        regfile_read_address_b = b0001; //read from the temporary register to know what movement it is
+        we_regfile = 1;
+        regfile_write_address = b1000;
+        if(regfile_datain[0]){
+          bsel = b001;
+        }else if(regfile_datain[1]){
+          bsel = b010;
+        }else if(regfile_datain[2]){
+          bsel = b011;
+        }else if(regfile_datain[3]){
+          bsel = b100;
+        }
+        game_fsm.d = IDLE;
+          
+        game_fsm.P1_PAINT:
+          alufn = b010010;//XOR function
+          regfile_read_address_a = b1000; //p1 cursor position
+          regfile_read_address_b = b0100; //p1 pattern
+          asel = b00;
+          bsel = b000;
+          we_regfile = 1;
+          regfile_write_address = b0100; //p1 pattern
+          game_fsm.d = IDLE;
+          
+          
+      //BUTTON PRESSES FOR EACH PLAYER
+      game_fsm.P2_ON_BUTTON_PRESS:
+        alufn = b000000; //ADD
+        regfile_read_address_a = b1111; //register for player 2 button press, different values for different presses
+        asel = b00;
+        bsel = b110; //bsel that is zero value 
+        we_regfile = 1;
+        regfile_write_address = b0000; //write to temp register
+        if(regfile_read_address_a == 4){
+          game_fsm.d = game_fsm.P2_PAINT;
+        }else{
+        game_fsm.d = game_fsm.P2_MOVE_POS; //move position state
+        }
+          
+      game_fsm.P2_MOVE_POS:
+        alufn = b000000; //ADD
+        regfile_read_address_a = b1001; //Register for p2 cursor position
+        asel = b00;
+        regfile_read_address_b = b0000; //read from the temporary register to know what movement it is
+        we_regfile = 1;
+        regfile_write_address = b1001;
+        if(regfile_datain[0]){
+          bsel = b001;
+        }else if(regfile_datain[1]){
+          bsel = b010;
+        }else if(regfile_datain[2]){
+          bsel = b011;
+        }else if(regfile_datain[3]){
+          bsel = b100;
+        }
+        game_fsm.d = IDLE;
+          
+          
+      game_fsm.P2_PAINT:
+          alufn = b010010;//XOR function
+          regfile_read_address_a = b1001; //p2 cursor position
+          regfile_read_address_b = b0101; //p2 pattern
+          asel = b00;
+          bsel = b000;
+          we_regfile = 1;
+          regfile_write_address = b0101; //p2 pattern
+          game_fsm.d = IDLE;
+        
+        
+        
 
       game_fsm.INCREASE_P1BUTTONCOUNT:
         alufn = b000000;
@@ -290,7 +389,7 @@ module game_painting_main (
         asel = b00;                                  //uses read a
         bsel = b00;                                   //read b
         we_regfile = 1;
-        regfile_write_address = b1111;                     //temp reg
+        regfile_write_address = b0000;                     //temp reg
         game_fsm.d = game_fsm.BRANCH_P1_PATTERN_MATCH;
           
           
@@ -302,7 +401,7 @@ module game_painting_main (
         asel = b00;                                  //uses read a
         bsel = b00;                                   //read b
         we_regfile = 1;
-        regfile_write_address = b1111;                     //temp reg
+        regfile_write_address = b0000;                      //temp reg
         game_fsm.d = game_fsm.BRANCH_P1_PATTERN_MATCH;
           
           
@@ -314,7 +413,7 @@ module game_painting_main (
         asel = b00;                                  //uses read a
         bsel = b00;                                   //read b
         we_regfile = 1;
-        regfile_write_address = b1111;                     //temp reg
+        regfile_write_address = b0000;                      //temp reg
         game_fsm.d = game_fsm.BRANCH_P1_PATTERN_MATCH;
           
           
@@ -326,7 +425,7 @@ module game_painting_main (
         asel = b00;                                  //uses read a
         bsel = b00;                                   //read b
         we_regfile = 1;
-        regfile_write_address = b1111;                     //temp reg
+        regfile_write_address = b0000;                     //temp reg
         game_fsm.d = game_fsm.BRANCH_P1_PATTERN_MATCH;
           
           
@@ -338,7 +437,7 @@ module game_painting_main (
         asel = b00;                                  //uses read a
         bsel = b00;                                   //read b
         we_regfile = 1;
-        regfile_write_address = b1111;                     //temp reg
+        regfile_write_address = b0000;                      //temp reg
         game_fsm.d = game_fsm.BRANCH_P1_PATTERN_MATCH;
           
           
@@ -347,7 +446,7 @@ module game_painting_main (
         regfile_read_address_b = b1111;      //temp reg
         if (regfile_datain[0]){ //If it is true that the player 1 pattern matches the current round pattern
           //go to check winner state, the game ends!
-          game_fsm.d = game_fsm.STOP_P1_TIME; //adds 1 to player 1 timer register to indicate p1 has finished first
+          game_fsm.d = game_fsm.P1_GET_POINT; //adds 1 to player 1 timer register to indicate p1 has finished first
           }
         else{ //if round counter is not 5 yet
           game_fsm.d = game_fsm.IDLE;
@@ -507,28 +606,7 @@ module game_painting_main (
           }
           
       //BRANCH NEXT ROUND TO FIND OUT WHAT ROUND NUMBER THE NEXT ROUND IS
-      //game_fsm.BRANCH_NEXTROUND: TODO: finish
-        
-          
-      game_fsm.BRANCH_DRAW:
-        regfile_read_address_b = b1111;      //temp reg
-        if (regfile_datain[0]){
-          //its draw
-          alu_out_sel = b10;                //draw signal
-          we_regfile = 1;
-          regfile_write_address = b0000;          //P1 score reg
-          game_fsm.d = game_fsm.DRAW;
-          }
-        else{
-          game_fsm.d = game_fsm.CHECK_FINAL_WINNER;
-          }
-      
-      game_fsm.DRAW:
-        alu_out_sel = b10;                //draw signal
-        we_regfile = 1; 
-        regfile_write_address = b0001;          //P2 score reg
-        game_fsm.d = game_fsm.GAMEOVER;  
-          
+      //game_fsm.BRANCH_NEXTROUND:
           
       //OURS: May need to state CHECK ROUND WINNER to award points to the winner of each round
       game_fsm.CHECK_ROUND_WINNER:
@@ -650,6 +728,9 @@ module game_painting_main (
         else{
             game_fsm.d = game_fsm.IDLE;
         }
+          
+          
+      //ROUND 1, 2,3,4,5 respective states?
 
 
       }
