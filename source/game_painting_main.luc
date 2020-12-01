@@ -99,7 +99,13 @@ module game_painting_main (
       P1_PAINT,
       P2_PAINT,
       
-      ROUND_IDLE
+      ROUND_IDLE,
+      CHECK_WHICH_ROUND,
+      SET_ROUND_PATTERN_1,
+      SET_ROUND_PATTERN_2,
+      SET_ROUND_PATTERN_3,
+      SET_ROUND_PATTERN_4,
+      SET_ROUND_PATTERN_5
       };
     
   }
@@ -149,7 +155,7 @@ module game_painting_main (
           bsel = b001; //bsel = output of bsel mux is the constant 1, which is also used to shift right
           we_regfile = 1;
           regfile_write_address = b0111; //write back to round counter register
-          game_fsm.d = game_fsm.ROUND_IDLE; //go to current round
+          game_fsm.d = game_fsm.CHECK_WHICH_ROUND; //go to current round
           
       game_fsm.ROUND_IDLE: //loops through the whole round checking until a trigger button is pressed, many states loops back to this state
         if (decrease_timer){
@@ -798,7 +804,88 @@ module game_painting_main (
           
           
       //ROUND 1, 2,3,4,5 respective states?
-
+      //Add round number checking and setting main led screen
+      game_fsm.CHECK_WHICH_ROUND:
+        regfile_read_address_b = b0111;      //round counter register
+        if (regfile_datain==b0001){
+          game_fsm.d = game_fsm.SET_ROUND_PATTERN_1; //CHECK FOR ROUND 1
+          }
+        else if(regfile_datain==b0010) {
+          game_fsm.d = game_fsm.SET_ROUND_PATTERN_2; //CHECK FOR ROUND 2
+          }
+        else if(regfile_datain==b0011) {
+          game_fsm.d = game_fsm.SET_ROUND_PATTERN_3; //CHECK FOR ROUND 3
+          }
+        else if(regfile_datain==b0100) {
+          game_fsm.d = game_fsm.SET_ROUND_PATTERN_4; //CHECK FOR ROUND 4
+          }
+        else if(regfile_datain==b0101) {
+          game_fsm.d = game_fsm.SET_ROUND_PATTERN_5; //CHECK FOR ROUND 5
+          }
+          else{
+          game_fsm.d = game_fsm.START_SET_TIMER;
+          }
+      
+       //Set central main LED for round 1
+      game_fsm.SET_ROUND_PATTERN_1:
+        alufn = b000000;                              //ADD
+        regfile_read_address_a = b0001;              //temp register 2 to hold value for current round pattern, and route to main screen LED
+        regfile_read_address_b = b0110;              //main central led configuration round 1
+        asel = b00;                                  //uses read a
+        bsel = b00;                                   //read b
+        we_regfile = 1;
+        regfile_write_address = b0001;                     //temp reg
+        game_fsm.d = game_fsm.ROUND_IDLE;       
+      
+      game_fsm.SET_ROUND_PATTERN_2:
+        alufn = b000000;                              //ADD
+        regfile_read_address_a = b0001;              //temp register 2 to hold value for current round pattern, and route to main screen LED
+        regfile_read_address_b = b1010;              //main central led configuration round 2
+        asel = b00;                                  //uses read a
+        bsel = b00;                                   //read b
+        we_regfile = 1;
+        regfile_write_address = b0001;                     //temp reg
+        game_fsm.d = game_fsm.ROUND_IDLE;
+      
+      game_fsm.SET_ROUND_PATTERN_3:
+        alufn = b000000;                              //ADD
+        regfile_read_address_a = b0001;              //temp register 2 to hold value for current round pattern, and route to main screen LED
+        regfile_read_address_b = b1011;              //main central led configuration round 3
+        asel = b00;                                  //uses read a
+        bsel = b00;                                   //read b
+        we_regfile = 1;
+        regfile_write_address = b0001;                     //temp reg
+        game_fsm.d = game_fsm.ROUND_IDLE;   
+      
+      game_fsm.SET_ROUND_PATTERN_3:
+        alufn = b000000;                              //ADD
+        regfile_read_address_a = b0001;              //temp register 2 to hold value for current round pattern, and route to main screen LED
+        regfile_read_address_b = b1100;              //main central led configuration round 3
+        asel = b00;                                  //uses read a
+        bsel = b00;                                   //read b
+        we_regfile = 1;
+        regfile_write_address = b0001;                     //temp reg
+        game_fsm.d = game_fsm.ROUND_IDLE;   
+      
+      game_fsm.SET_ROUND_PATTERN_4:
+        alufn = b000000;                              //ADD
+        regfile_read_address_a = b0001;              //temp register 2 to hold value for current round pattern, and route to main screen LED
+        regfile_read_address_b = b1101;              //main central led configuration round 4
+        asel = b00;                                  //uses read a
+        bsel = b00;                                   //read b
+        we_regfile = 1;
+        regfile_write_address = b0001;                     //temp reg
+        game_fsm.d = game_fsm.ROUND_IDLE;
+      
+      game_fsm.SET_ROUND_PATTERN_5:
+        alufn = b000000;                              //ADD
+        regfile_read_address_a = b0001;              //temp register 2 to hold value for current round pattern, and route to main screen LED
+        regfile_read_address_b = b1111;              //main central led configuration round 5
+        asel = b00;                                  //uses read a
+        bsel = b00;                                   //read b
+        we_regfile = 1;
+        regfile_write_address = b0001;                     //temp reg
+        game_fsm.d = game_fsm.ROUND_IDLE;                  
 
       }
     } 
