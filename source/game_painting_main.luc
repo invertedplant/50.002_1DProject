@@ -89,6 +89,8 @@ module game_painting_main (
       BRANCH_NEXTROUND,
       
       RESET_BOARD_TIME,
+      RESET_BOARD,
+      RESET_BOARD_2,
       
       P1_ON_BUTTON_PRESS,
       P1_MOVE_POS,
@@ -152,9 +154,6 @@ module game_painting_main (
       game_fsm.ROUND_IDLE: //loops through the whole round checking until a trigger button is pressed, many states loops back to this state
         if (decrease_timer){
           game_fsm.d = game_fsm.CHECK_GAMETIMER;
-        }
-        else if (increase_counter && ~p1_button && ~p2_button){
-            game_fsm.d = game_fsm.INC_COUNTER;
         }
         else if (p1_button && ~p2_button){
             game_fsm.d = game_fsm.P1_ON_BUTTON_PRESS; //checks if player 1 pattern matches triggered by the final "paint button"
@@ -707,7 +706,7 @@ module game_painting_main (
          bsel = b001;                                //B = 1
          we_regfile = 1;                           
          regfile_write_address = b0010;                   //place back to P1 score reg
-         game_fsm.d = game_fsm.ADD_ROUND_COUNTER;
+         game_fsm.d = game_fsm.CHECK_GAMEFINISH;
           
       //increases p2 score
       game_fsm.INCREASE_P2SCORE:
@@ -718,7 +717,7 @@ module game_painting_main (
         bsel = b001;                               //B = 1
         we_regfile = 1; 
         regfile_write_address = b0001;                 //place back tot P2 score reg
-        game_fsm.d = game_fsm.ADD_ROUND_COUNTER;  
+        game_fsm.d = game_fsm.CHECK_GAMEFINISH;  
           
       //--------------------------------------------------------------------------------------------------------------------------------------------
           
