@@ -93,7 +93,9 @@ module game_painting_main (
       P2_ON_BUTTON_PRESS,
       P2_MOVE_POS,
       P1_PAINT,
-      P2_PAINT
+      P2_PAINT,
+      
+      ROUND_IDLE
       };
     
   }
@@ -122,7 +124,7 @@ module game_painting_main (
     else{
       
     case(game_fsm.q){
-      game_fsm.START_SET_TIMER: 
+      game_fsm.START_SET_TIMER: //sets a timer to allow cooldown on game starts
         alufn = b000000;                             //ADD
         asel = b11;                                  //30
         we_regfile = 1; 
@@ -143,7 +145,24 @@ module game_painting_main (
           bsel = b001; //bsel = output of bsel mux is the constant 1, which is also used to shift right
           we_regfile = 1;
           regfile_write_address = b0111; //write back to round counter register
-          game_fsm.d = game_fsm.ROUND_1_SET_PATTERN; //check who is the round winner
+          game_fsm.d = game_fsm.ROUND_IDLE; //go to current round
+          
+      game_fsm.ROUND_IDLE: //loops through the whole round checking until a trigger button is pressed, many states loops back to this state
+        if (decrease_timer){
+          game_fsm.d = game_fsm.CHECK_GAMETIMER;
+        }
+        else if (increase_counter && ~p1_button && ~p2_button){
+            game_fsm.d = game_fsm.INC_COUNTER;
+        }
+        else if (p1_button && ~p2_button){
+            game_fsm.d = game_fsm.P1_ON_BUTTON_PRESS; //checks if player 1 pattern matches triggered by the final "paint button"
+        }
+        else if (p2_button && ~p1_button){
+            game_fsm.d = game_fsm.P2_ON_BUTTON_PRESS; //checks if player 2 pattern matches
+        }
+        else{
+            game_fsm.d = game_fsm.ROUND_IDLE;
+        }
         
       game_fsm.INC_COUNTER:
         //set output and next state
@@ -173,7 +192,7 @@ module game_painting_main (
         else{
           game_fsm.d = game_fsm.IDLE;
         }
-               
+      //---------------------------------------------------------------------------------------------------------------------------------
       //BUTTON PRESSES FOR EACH PLAYER
       game_fsm.P1_ON_BUTTON_PRESS:
         alufn = b000000; //ADD
@@ -216,7 +235,7 @@ module game_painting_main (
           regfile_write_address = b0100; //p1 pattern
           game_fsm.d = IDLE;
           
-          
+      //---------------------------------------------------------------------------------------------------------------------------------
       //BUTTON PRESSES FOR EACH PLAYER
       game_fsm.P2_ON_BUTTON_PRESS:
         alufn = b000000; //ADD
@@ -258,9 +277,9 @@ module game_painting_main (
           bsel = b000;
           we_regfile = 1;
           regfile_write_address = b0101; //p2 pattern
-          game_fsm.d = IDLE;
+          game_fsm.d = CHECK_P1_PATTERN_MATCH;
         
-        
+      //---------------------------------------------------------------------------------------------------------------------------------
         
 
       game_fsm.INCREASE_P1BUTTONCOUNT:
@@ -446,10 +465,10 @@ module game_painting_main (
         regfile_read_address_b = b1111;      //temp reg
         if (regfile_datain[0]){ //If it is true that the player 1 pattern matches the current round pattern
           //go to check winner state, the game ends!
-          game_fsm.d = game_fsm.P1_GET_POINT; //adds 1 to player 1 timer register to indicate p1 has finished first
+          game_fsm.d = game_fsm.INCREASE_P1SCORE; //adds 1 to player 1 timer register to indicate p1 has finished first
           }
         else{ //if round counter is not 5 yet
-          game_fsm.d = game_fsm.IDLE;
+          game_fsm.d = game_fsm.ROUND_IDLE;
           }
           
       //maybe stop player 1 time
@@ -527,10 +546,10 @@ module game_painting_main (
         regfile_read_address_b = b1111;      //temp reg
         if (regfile_datain[0]){ //If it is true that the player 1 pattern matches the current round pattern
           //go to check winner state, the game ends!
-          game_fsm.d = game_fsm.STOP_P2_TIME; //adds 1 to player 2 timer register to indicate p2 has finished first
+          game_fsm.d = game_fsm.INCREASE_P2SCORE; //adds 1 to player 2 timer register to indicate p2 has finished first
           }
         else{ //if round counter is not 5 yet
-          game_fsm.d = game_fsm.IDLE;
+          game_fsm.d = game_fsm.ROUND_IDLE;
           }
           
       //maybe stop player 1 time
