@@ -55,16 +55,18 @@ module game_regfiles (
         b0001 : register_temp2.d = data;
         b0010 : register_p1_score.d = data;
         b0011 : register_p2_score.d = data; //register 3
-        b0100 : register_p1_led_pattern.d = data; //register 4
-        b0101 : register_p2_led_pattern.d = data;
-        b0110 : register_central_led_pattern.d = data;
-        b0111 : register_round_counter.d = data;
-        b1000 : register_p1_cursor_pos.d = data;
-        b1001 : register_p2_cursor_pos.d = data;
-        b1010 : register_central_led_pattern2.d = data;
-        b1011 : register_central_led_pattern3.d = data;
-        b1100 : register_central_led_pattern4.d = data;
-        b1101 : register_central_led_pattern5.d = data;
+        b0100 : register_p1_led_pattern.d = data[8:0]; //register 4
+        b0101 : register_p2_led_pattern.d = data[8:0];
+        b0110 : register_central_led_pattern.d = data[8:0];
+        b0111 : register_round_counter.d = data[8:0];
+        b1000 : register_p1_cursor_pos.d = data[8:0];
+        b1001 : register_p2_cursor_pos.d = data[8:0];
+        b1010 : register_central_led_pattern2.d = data[8:0];
+        b1011 : register_central_led_pattern3.d = data[8:0];
+        b1100 : register_central_led_pattern4.d = data[8:0];
+        b1101 : register_central_led_pattern5.d = data[8:0];
+
+
         b1110 : register_p1_buttonPress.d = data;
         b1111 : register_p2_buttonPress.d = data;
       }
@@ -89,7 +91,7 @@ module game_regfiles (
         b1101 : out_a = register_central_led_pattern5.q;
         b1110 : out_a = register_p1_buttonPress.q;
         b1111 : out_a = register_p2_buttonPress.q;
-        default : out_a = 0;
+        default : out_a = 16b0;
     }
     
     //read port b
@@ -110,7 +112,7 @@ module game_regfiles (
         b1101 : out_b = register_central_led_pattern5.q;
         b1110 : out_b = register_p1_buttonPress.q;
         b1111 : out_b = register_p2_buttonPress.q;
-        default : out_b = 0;
+        default : out_b = 16b0;
     }
       
     

@@ -10,7 +10,7 @@ module au_top (
     output io_led [24],   // LEDs on IO Shield
     input io_button [5],    // 5 buttons on IO Shield
     input io_dip [24],     // DIP switches on IO Shield
-    */ //I don't think we're using the 
+    */ //I don't think we're using these 
     // our custom inputs go here
     input p1button[5],
     input p2button[5],

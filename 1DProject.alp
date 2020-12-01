@@ -5,7 +5,6 @@
     <src>game_regfiles.luc</src>
     <src>game_painting_main.luc</src>
     <src>compare.luc</src>
-    <src>game_moveplayerpos.luc</src>
     <src>alu.luc</src>
     <src>variable_counter.luc</src>
     <component>edge_detector.luc</component>
