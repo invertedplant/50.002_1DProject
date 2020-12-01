@@ -171,34 +171,6 @@ module game_painting_main (
             game_fsm.d = game_fsm.ROUND_IDLE;
         }
         
-      game_fsm.INC_COUNTER:
-        //set output and next state
-        alufn = b000000;                             //ADD
-        regfile_read_address_a = b0111;              //counter reg
-        bsel = b01;                                  //constant 1 
-        asel = b00;                                  
-        we_regfile = 1;
-        regfile_write_address = b0111;                     //counter reg 
-        decimal_counter_increase = 1;
-        game_fsm.d = game_fsm.IDLE;
-      
-      game_fsm.CHECK_P1BUTTONCOUNT:
-        alufn = b110101;                             //CMPLT
-        regfile_read_address_a = b0010;              //p1 button count reg
-        bsel = b11;                                  //constant 3
-        asel = b00; 
-        we_regfile = 1;
-        regfile_write_address = b1111;                     //temp reg
-        game_fsm.d = game_fsm.BRANCH_P1BUTTON;
-        
-      game_fsm.BRANCH_P1BUTTON:
-        regfile_read_address_b = b1111;              //temp reg 
-        if (regfile_datain[0]){                      //direct read in
-          game_fsm.d = game_fsm.INCREASE_P1SCORE;
-        }
-        else{
-          game_fsm.d = game_fsm.IDLE;
-        }
       //---------------------------------------------------------------------------------------------------------------------------------
       //BUTTON PRESSES FOR EACH PLAYER
       game_fsm.P1_ON_BUTTON_PRESS:
@@ -288,112 +260,6 @@ module game_painting_main (
         
       //---------------------------------------------------------------------------------------------------------------------------------
         
-
-      game_fsm.INCREASE_P1BUTTONCOUNT:
-        alufn = b000000;
-        regfile_read_address_b = b0010;
-        bsel = b00; // p1's button
-        asel = b01; // plus 1 
-        we_regfile = 1; 
-        regfile_write_address = b0010;
-        game_fsm.d = game_fsm.RESET_COUNTER;
-        
-      game_fsm.CHECK_P2BUTTONCOUNT:
-        alufn = b110101;                           //CMPLT
-        regfile_read_address_a = b0011;            //P2 button count reg
-        bsel = b11;                                //constant 3
-        asel = b00; 
-        we_regfile = 1;
-        regfile_write_address = b1111;                   //temp reg
-        game_fsm.d = game_fsm.BRANCH_P2BUTTON; 
-      
-      game_fsm.BRANCH_P2BUTTON:
-        regfile_read_address_b = b1111;            //temp reg
-        if (regfile_datain[0]){                    //direct read
-          game_fsm.d = game_fsm.INCREASE_P2SCORE;
-        }
-        else{
-          game_fsm.d = game_fsm.IDLE;
-        }
-           
-      
-        
-      game_fsm.INCREASE_P2BUTTONCOUNT:
-        alufn = b000000;
-        regfile_read_address_b = b0011;          //P2 button reg
-        bsel = b00;                         
-        asel = b01;                              //constant 1
-        we_regfile = 1; 
-        regfile_write_address = b0011;                 //P2 button reg
-        game_fsm.d = game_fsm.RESET_COUNTER;
-            
-      game_fsm.RESET_COUNTER:
-        alu_out_sel = b11;                       //constant 0
-        we_regfile = 1;
-        regfile_write_address = b0111;                 //counter reg
-        decimal_counter_rst = 1;
-        decimal_counter_increase = 0;
-        game_fsm.d = game_fsm.CHECK_P1P2BUTTONCOUNT; 
-               
-      game_fsm.DECREASE_GAMETIMER:
-        alufn = b000001;                         //SUB
-        regfile_read_address_a = b1000;          //timer reg
-        asel = b00; 
-        bsel = b01;                              //constant 1
-        we_regfile = 1;
-        regfile_write_address = b1000;
-        game_fsm.d = game_fsm.IDLE;
-          
-      game_fsm.CHECK_GAMETIMER:
-        alufn = b110011;                         //CMPEQ
-        regfile_read_address_a = b1000;          //timer reg
-        asel = b00;
-        bsel = b10;                              //constant 0
-        we_regfile = 1;
-        regfile_write_address = b1111;                 //temp eg 
-        game_fsm.d = game_fsm.BRANCH_GAMETIMER;
-      
-      game_fsm.BRANCH_GAMETIMER:
-        regfile_read_address_b = b1111;          //temp reg
-        if (~regfile_datain[0]){                 //if timer is not zero
-          game_fsm.d = game_fsm.DECREASE_GAMETIMER;
-          }
-        else{
-          game_fsm.d = game_fsm.CHECK_DRAW;
-          }
-          
-      game_fsm.CHECK_P1P2BUTTONCOUNT:
-        alufn = b110011; //CMPEQ
-        regfile_read_address_a = b0010;         //P1 button reg
-        regfile_read_address_b = b0011;         //P2 button reg
-        asel = b00;
-        bsel = b00;
-        we_regfile = 1;
-        regfile_write_address = b1111;                //temp reg
-        game_fsm.d = game_fsm.BRANCHCHECK_P1P2BUTTONCOUNT;
-          
-      game_fsm.BRANCHCHECK_P1P2BUTTONCOUNT:
-        regfile_read_address_b = b1111;        //temp reg
-        if(regfile_datain[0]){  
-          alufn = b110011;                     //CMPEQ 
-          regfile_read_address_a = b0010;      //P1 button reg
-          bsel = b11;                          //constant 3
-          we_regfile = 1;
-          regfile_write_address = b1111;             //temp reg
-          game_fsm.d = game_fsm.BRANCH_P1BUTTONCOUNT;  
-          }
-        else{
-          game_fsm.d = game_fsm.IDLE;
-          }
-      
-      game_fsm.BRANCH_P1BUTTONCOUNT:
-        regfile_read_address_b = b1111;       //temp reg
-        if(regfile_datain[0]){
-          game_fsm.d = game_fsm.CHECK_DRAW;   
-          }
-        else{
-          game_fsm.d = game_fsm.IDLE;
-          }
           
       //---------------------------------------------------------------------------------------------------------------------------------------
       //OURS:CHECK P1 PATTERN MATCH ROUND 1
@@ -655,28 +521,6 @@ module game_painting_main (
           
           
       //OURS: RESET_BOARD_TIME, to reset after each round ends and after adding scores
-      game_fsm.RESET_BOARD_TIME:    //
-        regfile_read_address_b = b1111; //temp reg where we store the value of CMPLT of the times
-        if (regfile_datain[0]){ //if this statement is TRUE, means player 2 FINISHES first
-            //Award points to player 2
-            alufn = b000001; //SUB FUNCTION
-            regfile_read_address_a = b0001; //register for p2 time
-            asel = b00; //asel = output of a
-            bsel = b001; //bsel = output of bsel mux is the constant 1, which is also used to shift right, so decrease p2time by 1 to reset it
-            we_regfile = 1;
-            regfile_write_address = b0001; //write back to round counter register
-            game_fsm.d = game_fsm.IDLE; 
-          }
-        else{ //p1 finishes faster than p2
-            //Award points to player 1
-            alufn = b000001; //SUB FUNCTION
-            regfile_read_address_a = b0000; //register for p1 time
-            asel = b00; //asel = output of a
-            bsel = b001; //bsel = output of bsel mux is the constant 1, which is also used to shift right, so decrease p2time by 1 to reset it
-            we_regfile = 1;
-            regfile_write_address = b0000; //write back to round counter register
-            game_fsm.d = game_fsm.IDLE; 
-          }
           
       //BRANCH NEXT ROUND TO FIND OUT WHAT ROUND NUMBER THE NEXT ROUND IS
       //game_fsm.BRANCH_NEXTROUND:
