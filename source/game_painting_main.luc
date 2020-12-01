@@ -116,7 +116,9 @@ module game_painting_main (
       
     case(game_fsm.q){
         game_fsm.START:
-    
+    //TODO: set defaults
+          
+          
       game_fsm.START_SET_TIMER: 
         alufn = b011010;                             //ADD
         asel = b11;                                  //30
@@ -505,9 +507,9 @@ module game_painting_main (
           }
           
       //BRANCH NEXT ROUND TO FIND OUT WHAT ROUND NUMBER THE NEXT ROUND IS
-      //game_fsm.BRANCH_NEXTROUND:
+      //game_fsm.BRANCH_NEXTROUND: TODO: finish
         
-          ;
+          
       game_fsm.BRANCH_DRAW:
         regfile_read_address_b = b1111;      //temp reg
         if (regfile_datain[0]){
