@@ -53,6 +53,9 @@ module game_painting_main (
       P1LOSE,
       GAMEOVER,
       
+      
+      CHECK_P1_PATTERN_MATCH,
+      
       CHECK_P1_PATTERN_MATCH_1,
       CHECK_P1_PATTERN_MATCH_2,
       CHECK_P1_PATTERN_MATCH_3,
@@ -63,6 +66,8 @@ module game_painting_main (
       
       
       STOP_P1_TIME,
+      
+      CHECK_P2_PATTERN_MATCH,
       
       CHECK_P2_PATTERN_MATCH_1,
       CHECK_P2_PATTERN_MATCH_2,
@@ -223,7 +228,7 @@ module game_painting_main (
         }else if(regfile_datain[3]){
           bsel = b100;
         }
-        game_fsm.d = IDLE;
+        game_fsm.d = game_fsm.ROUND_IDLE;
           
         game_fsm.P1_PAINT:
           alufn = b010010;//XOR function
@@ -233,7 +238,7 @@ module game_painting_main (
           bsel = b000;
           we_regfile = 1;
           regfile_write_address = b0100; //p1 pattern
-          game_fsm.d = IDLE;
+          game_fsm.d = game_fsm.CHECK_P1_PATTERN_MATCH;
           
       //---------------------------------------------------------------------------------------------------------------------------------
       //BUTTON PRESSES FOR EACH PLAYER
@@ -266,7 +271,7 @@ module game_painting_main (
         }else if(regfile_datain[3]){
           bsel = b100;
         }
-        game_fsm.d = IDLE;
+        game_fsm.d = game_fsm.ROUND_IDLE;
           
           
       game_fsm.P2_PAINT:
@@ -277,7 +282,7 @@ module game_painting_main (
           bsel = b000;
           we_regfile = 1;
           regfile_write_address = b0101; //p2 pattern
-          game_fsm.d = CHECK_P1_PATTERN_MATCH;
+          game_fsm.d = game_fsm.CHECK_P2_PATTERN_MATCH;
         
       //---------------------------------------------------------------------------------------------------------------------------------
         
@@ -401,6 +406,27 @@ module game_painting_main (
           
       //---------------------------------------------------------------------------------------------------------------------------------------
       //OURS:CHECK P1 PATTERN MATCH ROUND 1
+      game_fsm.CHECK_P1_PATTERN_MATCH: //general case that branches to specific pattern based on rounds
+        regfile_read_address_b = b0111;      //round counter register
+        if (regfile_datain==b0001){
+          game_fsm.d = game_fsm.CHECK_P1_PATTERN_MATCH_1; //CHECK FOR ROUND 1
+          }
+        else if(regfile_datain==b0010) {
+          game_fsm.d = game_fsm.CHECK_P1_PATTERN_MATCH_2; //CHECK FOR ROUND 2
+          }
+        else if(regfile_datain==b0011) {
+          game_fsm.d = game_fsm.CHECK_P1_PATTERN_MATCH_3; //CHECK FOR ROUND 3
+          }
+        else if(regfile_datain==b0100) {
+          game_fsm.d = game_fsm.CHECK_P1_PATTERN_MATCH_4; //CHECK FOR ROUND 4
+          }
+        else if(regfile_datain==b0101) {
+          game_fsm.d = game_fsm.CHECK_P1_PATTERN_MATCH_5; //CHECK FOR ROUND 5
+          }
+          else{
+          game_fsm.d = game_fsm.START_SET_TIMER;
+          }
+        
       game_fsm.CHECK_P1_PATTERN_MATCH_1:
         alufn = b110011;                              //CMPEQ
         regfile_read_address_a = b0100;              //p1 on screen pattern register
@@ -482,6 +508,26 @@ module game_painting_main (
         game_fsm.d = game_fsm.CHECK_ROUND_WINNER;
           
       //-----------------------------------------------------------------------------------------------------------------------------------
+      game_fsm.CHECK_P2_PATTERN_MATCH: //general case that branches to specific pattern based on rounds
+        regfile_read_address_b = b0111;      //round counter register
+        if (regfile_datain==b0001){
+          game_fsm.d = game_fsm.CHECK_P2_PATTERN_MATCH_1; //CHECK FOR ROUND 1
+          }
+        else if(regfile_datain==b0010) {
+          game_fsm.d = game_fsm.CHECK_P2_PATTERN_MATCH_2; //CHECK FOR ROUND 2
+          }
+        else if(regfile_datain==b0011) {
+          game_fsm.d = game_fsm.CHECK_P2_PATTERN_MATCH_3; //CHECK FOR ROUND 3
+          }
+        else if(regfile_datain==b0100) {
+          game_fsm.d = game_fsm.CHECK_P2_PATTERN_MATCH_4; //CHECK FOR ROUND 4
+          }
+        else if(regfile_datain==b0101) {
+          game_fsm.d = game_fsm.CHECK_P2_PATTERN_MATCH_5; //CHECK FOR ROUND 5
+          }
+          else{
+          game_fsm.d = game_fsm.START_SET_TIMER;
+          }
       //OURS:CHECK P2 PATTERN MATCH ROUND 1
       game_fsm.CHECK_P2_PATTERN_MATCH_1:
         alufn = b110011;                              //CMPEQ
