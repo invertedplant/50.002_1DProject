@@ -66,6 +66,8 @@ module game_betacpu (
     case(game_controlunit.asel){
       b00  : inputAlu_a = players.out_a;
       b01  : inputAlu_a = players.register_round_counter.q; // You can't do this, you have to assign the round counter register to an output of the regfile, probably out_b
+      b10 : inputAlu_a = 30;
+      b11 : inputAlu_a = 0;
       default : //b10 unused
           inputAlu_a = 0;
     }
@@ -78,6 +80,7 @@ module game_betacpu (
       b011 : inputAlu_b = -1; //left
       b100 : inputAlu_b = -3; //down
       b101 : inputAlu_b = 5; //constant 5
+      b110 : inputAlu_b = 0; //constant 0
       default: //necessary to init
           inputAlu_b = 0;
       

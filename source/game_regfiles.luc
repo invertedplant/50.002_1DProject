@@ -24,8 +24,8 @@ module game_regfiles (
 {
   .clk(clk){
     .rst(rst){
-      dff register_p1_time[16];
-      dff register_p2_time[16];
+      dff register_temp1[16]; //temporary 1
+      dff register_temp2[16]; //temporary 2
       dff register_p1_score[16]; //register for player 1 score
       dff register_p2_score[16]; //register for player 2 score
       dff register_p1_led_pattern[9]; //register for player 1 led board
@@ -51,11 +51,11 @@ module game_regfiles (
     //write port
     if (we){
       case(write_address){
-        b0000 : register_p1_time.d = data;
-        b0001 : register_p2_time.d = data;
+        b0000 : register_temp1.d = data;
+        b0001 : register_temp2.d = data;
         b0010 : register_p1_score.d = data;
         b0011 : register_p2_score.d = data; //register 3
-        b0100 : register_p1_led_pattern.d = data[8:0]; //register 4 - should probably only assign lower bits of data[8:0] to avoid this warning 
+        b0100 : register_p1_led_pattern.d = data[8:0]; //register 4
         b0101 : register_p2_led_pattern.d = data[8:0];
         b0110 : register_central_led_pattern.d = data[8:0];
         b0111 : register_round_counter.d = data[8:0];
@@ -65,6 +65,8 @@ module game_regfiles (
         b1011 : register_central_led_pattern3.d = data[8:0];
         b1100 : register_central_led_pattern4.d = data[8:0];
         b1101 : register_central_led_pattern5.d = data[8:0];
+
+
         b1110 : register_p1_buttonPress.d = data;
         b1111 : register_p2_buttonPress.d = data;
       }
@@ -73,8 +75,8 @@ module game_regfiles (
       
     //read port a
     case(read_address_a){
-        b0000 : out_a = register_p1_time.q;
-        b0001 : out_a = register_p2_time.q;
+        b0000 : out_a = register_temp1.q;
+        b0001 : out_a = register_temp2.q;
         b0010 : out_a = register_p1_score.q;
         b0011 : out_a = register_p2_score.q; //register 3
         b0100 : out_a = register_p1_led_pattern.q; //register 4
@@ -94,8 +96,8 @@ module game_regfiles (
     
     //read port b
     case(read_address_b){
-        b0000 : out_b = register_p1_time.q;
-        b0001 : out_b = register_p2_time.q;
+        b0000 : out_b = register_temp1.q;
+        b0001 : out_b = register_temp2.q;
         b0010 : out_b = register_p1_score.q;
         b0011 : out_b = register_p2_score.q; //register 3
         b0100 : out_b = register_p1_led_pattern.q; //register 4
@@ -120,8 +122,8 @@ module game_regfiles (
     all_scores[31:16] = register_p2_score.q;
     all_buttons[1:0] = register_p1_buttonPress.q[1:0];
     all_buttons[3:2] = register_p2_buttonPress.q[1:0];
-    all_time[15:0] = register_p1_time.q;
-    all_time[31:16] = register_p2_time.q;
+    all_time[15:0] = register_temp1.q;
+    all_time[31:16] = register_temp2.q;
     counter_out = register_round_counter.q;
   }
 }

@@ -42,9 +42,6 @@ module game_painting_main (
       CHECK_P1P2BUTTONCOUNT,
       BRANCHCHECK_P1P2BUTTONCOUNT,
       BRANCH_P1BUTTONCOUNT, 
-      CHECK_DRAW,
-      BRANCH_DRAW,
-      DRAW,
       CHECK_WINNER,
       BRANCH_WINNER,
       P1WINS,
@@ -52,6 +49,9 @@ module game_painting_main (
       P2WINS,
       P1LOSE,
       GAMEOVER,
+      
+      
+      CHECK_P1_PATTERN_MATCH,
       
       CHECK_P1_PATTERN_MATCH_1,
       CHECK_P1_PATTERN_MATCH_2,
@@ -63,6 +63,8 @@ module game_painting_main (
       
       
       STOP_P1_TIME,
+      
+      CHECK_P2_PATTERN_MATCH,
       
       CHECK_P2_PATTERN_MATCH_1,
       CHECK_P2_PATTERN_MATCH_2,
@@ -87,6 +89,8 @@ module game_painting_main (
       BRANCH_NEXTROUND,
       
       RESET_BOARD_TIME,
+      RESET_BOARD,
+      RESET_BOARD_2,
       
       P1_ON_BUTTON_PRESS,
       P1_MOVE_POS,
@@ -95,7 +99,13 @@ module game_painting_main (
       P1_PAINT,
       P2_PAINT,
       
-      ROUND_IDLE
+      ROUND_IDLE,
+      CHECK_WHICH_ROUND,
+      SET_ROUND_PATTERN_1,
+      SET_ROUND_PATTERN_2,
+      SET_ROUND_PATTERN_3,
+      SET_ROUND_PATTERN_4,
+      SET_ROUND_PATTERN_5
       };
     
   }
@@ -145,14 +155,11 @@ module game_painting_main (
           bsel = b001; //bsel = output of bsel mux is the constant 1, which is also used to shift right
           we_regfile = 1;
           regfile_write_address = b0111; //write back to round counter register
-          game_fsm.d = game_fsm.ROUND_IDLE; //go to current round
+          game_fsm.d = game_fsm.CHECK_WHICH_ROUND; //go to current round
           
       game_fsm.ROUND_IDLE: //loops through the whole round checking until a trigger button is pressed, many states loops back to this state
         if (decrease_timer){
           game_fsm.d = game_fsm.CHECK_GAMETIMER;
-        }
-        else if (increase_counter && ~p1_button && ~p2_button){
-            game_fsm.d = game_fsm.INC_COUNTER;
         }
         else if (p1_button && ~p2_button){
             game_fsm.d = game_fsm.P1_ON_BUTTON_PRESS; //checks if player 1 pattern matches triggered by the final "paint button"
@@ -223,7 +230,7 @@ module game_painting_main (
         }else if(regfile_datain[3]){
           bsel = b100;
         }
-        game_fsm.d = IDLE;
+        game_fsm.d = game_fsm.ROUND_IDLE;
           
         game_fsm.P1_PAINT:
           alufn = b010010;//XOR function
@@ -233,7 +240,7 @@ module game_painting_main (
           bsel = b000;
           we_regfile = 1;
           regfile_write_address = b0100; //p1 pattern
-          game_fsm.d = IDLE;
+          game_fsm.d = game_fsm.CHECK_P1_PATTERN_MATCH;
           
       //---------------------------------------------------------------------------------------------------------------------------------
       //BUTTON PRESSES FOR EACH PLAYER
@@ -266,7 +273,7 @@ module game_painting_main (
         }else if(regfile_datain[3]){
           bsel = b100;
         }
-        game_fsm.d = IDLE;
+        game_fsm.d = game_fsm.ROUND_IDLE;
           
           
       game_fsm.P2_PAINT:
@@ -277,7 +284,7 @@ module game_painting_main (
           bsel = b000;
           we_regfile = 1;
           regfile_write_address = b0101; //p2 pattern
-          game_fsm.d = CHECK_P1_PATTERN_MATCH;
+          game_fsm.d = game_fsm.CHECK_P2_PATTERN_MATCH;
         
       //---------------------------------------------------------------------------------------------------------------------------------
         
@@ -387,20 +394,30 @@ module game_painting_main (
         else{
           game_fsm.d = game_fsm.IDLE;
           }
-      
-      game_fsm.CHECK_DRAW:
-        alufn = b110011; //CMPEQ
-        regfile_read_address_a = b0000;      //P1 score reg
-        regfile_read_address_b = b0001;      //P2 score reg
-        asel = b00;
-        bsel = b00;
-        we_regfile = 1;
-        regfile_write_address = b1111;             //temp reg
-        game_fsm.d = game_fsm.BRANCH_DRAW;
-          
           
       //---------------------------------------------------------------------------------------------------------------------------------------
       //OURS:CHECK P1 PATTERN MATCH ROUND 1
+      game_fsm.CHECK_P1_PATTERN_MATCH: //general case that branches to specific pattern based on rounds
+        regfile_read_address_b = b0111;      //round counter register
+        if (regfile_datain==b0001){
+          game_fsm.d = game_fsm.CHECK_P1_PATTERN_MATCH_1; //CHECK FOR ROUND 1
+          }
+        else if(regfile_datain==b0010) {
+          game_fsm.d = game_fsm.CHECK_P1_PATTERN_MATCH_2; //CHECK FOR ROUND 2
+          }
+        else if(regfile_datain==b0011) {
+          game_fsm.d = game_fsm.CHECK_P1_PATTERN_MATCH_3; //CHECK FOR ROUND 3
+          }
+        else if(regfile_datain==b0100) {
+          game_fsm.d = game_fsm.CHECK_P1_PATTERN_MATCH_4; //CHECK FOR ROUND 4
+          }
+        else if(regfile_datain==b0101) {
+          game_fsm.d = game_fsm.CHECK_P1_PATTERN_MATCH_5; //CHECK FOR ROUND 5
+          }
+          else{
+          game_fsm.d = game_fsm.START_SET_TIMER;
+          }
+        
       game_fsm.CHECK_P1_PATTERN_MATCH_1:
         alufn = b110011;                              //CMPEQ
         regfile_read_address_a = b0100;              //p1 on screen pattern register
@@ -482,6 +499,26 @@ module game_painting_main (
         game_fsm.d = game_fsm.CHECK_ROUND_WINNER;
           
       //-----------------------------------------------------------------------------------------------------------------------------------
+      game_fsm.CHECK_P2_PATTERN_MATCH: //general case that branches to specific pattern based on rounds
+        regfile_read_address_b = b0111;      //round counter register
+        if (regfile_datain==b0001){
+          game_fsm.d = game_fsm.CHECK_P2_PATTERN_MATCH_1; //CHECK FOR ROUND 1
+          }
+        else if(regfile_datain==b0010) {
+          game_fsm.d = game_fsm.CHECK_P2_PATTERN_MATCH_2; //CHECK FOR ROUND 2
+          }
+        else if(regfile_datain==b0011) {
+          game_fsm.d = game_fsm.CHECK_P2_PATTERN_MATCH_3; //CHECK FOR ROUND 3
+          }
+        else if(regfile_datain==b0100) {
+          game_fsm.d = game_fsm.CHECK_P2_PATTERN_MATCH_4; //CHECK FOR ROUND 4
+          }
+        else if(regfile_datain==b0101) {
+          game_fsm.d = game_fsm.CHECK_P2_PATTERN_MATCH_5; //CHECK FOR ROUND 5
+          }
+          else{
+          game_fsm.d = game_fsm.START_SET_TIMER;
+          }
       //OURS:CHECK P2 PATTERN MATCH ROUND 1
       game_fsm.CHECK_P2_PATTERN_MATCH_1:
         alufn = b110011;                              //CMPEQ
@@ -597,7 +634,24 @@ module game_painting_main (
           bsel = b001; //bsel = output of bsel mux is the constant 1, which is also used to shift right
           we_regfile = 1;
           regfile_write_address = b0111; //write back to round counter register
-          game_fsm.d = game_fsm.CHECK_ROUND_WINNER; //check who is the round winner
+          game_fsm.d = game_fsm.RESET_BOARD; //check who is the round winner
+          
+          
+     game_fsm.RESET_BOARD:
+        alu_out_sel = b11;                       //wdsel constant 0
+        we_regfile = 1;
+        regfile_write_address = b0100;                 //P1 board register
+        decimal_counter_rst = 1;
+        decimal_counter_increase = 0;
+        game_fsm.d = game_fsm.RESET_BOARD_2; 
+          
+     game_fsm.RESET_BOARD_2:
+        alu_out_sel = b11;                       //wdsel constant 0
+        we_regfile = 1;
+        regfile_write_address = b0101;                 //P2 board register
+        decimal_counter_rst = 1;
+        decimal_counter_increase = 0;
+        game_fsm.d = game_fsm.ROUND_IDLE; 
           
           
       //OURS: RESET_BOARD_TIME, to reset after each round ends and after adding scores
@@ -627,7 +681,7 @@ module game_painting_main (
       //BRANCH NEXT ROUND TO FIND OUT WHAT ROUND NUMBER THE NEXT ROUND IS
       //game_fsm.BRANCH_NEXTROUND:
           
-      //OURS: May need to state CHECK ROUND WINNER to award points to the winner of each round
+      /*OURS: May need to state CHECK ROUND WINNER to award points to the winner of each round
       game_fsm.CHECK_ROUND_WINNER:
         alufn = b110101;                 //CMPLT, compare less than
         regfile_read_address_a = b0010;  //P1 TIME reg 
@@ -647,7 +701,7 @@ module game_painting_main (
           }
         else{ //p1 finishes faster than p2
             //Award points to player 1
-            game_fsm.d = game_fsm.INCREASE_P1SCORE; 
+            game_fsm.d = game_fsm.INCREASE_P1SCORE; */
           }
           
       //INCREASES P1 score
@@ -658,7 +712,7 @@ module game_painting_main (
          bsel = b001;                                //B = 1
          we_regfile = 1;                           
          regfile_write_address = b0010;                   //place back to P1 score reg
-         game_fsm.d = game_fsm.RESET_BOARD_TIME;
+         game_fsm.d = game_fsm.CHECK_GAMEFINISH;
           
       //increases p2 score
       game_fsm.INCREASE_P2SCORE:
@@ -669,7 +723,7 @@ module game_painting_main (
         bsel = b001;                               //B = 1
         we_regfile = 1; 
         regfile_write_address = b0001;                 //place back tot P2 score reg
-        game_fsm.d = game_fsm.RESET_BOARD_TIME;  
+        game_fsm.d = game_fsm.CHECK_GAMEFINISH;  
           
       //--------------------------------------------------------------------------------------------------------------------------------------------
           
@@ -750,7 +804,88 @@ module game_painting_main (
           
           
       //ROUND 1, 2,3,4,5 respective states?
-
+      //Add round number checking and setting main led screen
+      game_fsm.CHECK_WHICH_ROUND:
+        regfile_read_address_b = b0111;      //round counter register
+        if (regfile_datain==b0001){
+          game_fsm.d = game_fsm.SET_ROUND_PATTERN_1; //CHECK FOR ROUND 1
+          }
+        else if(regfile_datain==b0010) {
+          game_fsm.d = game_fsm.SET_ROUND_PATTERN_2; //CHECK FOR ROUND 2
+          }
+        else if(regfile_datain==b0011) {
+          game_fsm.d = game_fsm.SET_ROUND_PATTERN_3; //CHECK FOR ROUND 3
+          }
+        else if(regfile_datain==b0100) {
+          game_fsm.d = game_fsm.SET_ROUND_PATTERN_4; //CHECK FOR ROUND 4
+          }
+        else if(regfile_datain==b0101) {
+          game_fsm.d = game_fsm.SET_ROUND_PATTERN_5; //CHECK FOR ROUND 5
+          }
+          else{
+          game_fsm.d = game_fsm.START_SET_TIMER;
+          }
+      
+       //Set central main LED for round 1
+      game_fsm.SET_ROUND_PATTERN_1:
+        alufn = b000000;                              //ADD
+        regfile_read_address_a = b0001;              //temp register 2 to hold value for current round pattern, and route to main screen LED
+        regfile_read_address_b = b0110;              //main central led configuration round 1
+        asel = b00;                                  //uses read a
+        bsel = b00;                                   //read b
+        we_regfile = 1;
+        regfile_write_address = b0001;                     //temp reg
+        game_fsm.d = game_fsm.ROUND_IDLE;       
+      
+      game_fsm.SET_ROUND_PATTERN_2:
+        alufn = b000000;                              //ADD
+        regfile_read_address_a = b0001;              //temp register 2 to hold value for current round pattern, and route to main screen LED
+        regfile_read_address_b = b1010;              //main central led configuration round 2
+        asel = b00;                                  //uses read a
+        bsel = b00;                                   //read b
+        we_regfile = 1;
+        regfile_write_address = b0001;                     //temp reg
+        game_fsm.d = game_fsm.ROUND_IDLE;
+      
+      game_fsm.SET_ROUND_PATTERN_3:
+        alufn = b000000;                              //ADD
+        regfile_read_address_a = b0001;              //temp register 2 to hold value for current round pattern, and route to main screen LED
+        regfile_read_address_b = b1011;              //main central led configuration round 3
+        asel = b00;                                  //uses read a
+        bsel = b00;                                   //read b
+        we_regfile = 1;
+        regfile_write_address = b0001;                     //temp reg
+        game_fsm.d = game_fsm.ROUND_IDLE;   
+      
+      game_fsm.SET_ROUND_PATTERN_3:
+        alufn = b000000;                              //ADD
+        regfile_read_address_a = b0001;              //temp register 2 to hold value for current round pattern, and route to main screen LED
+        regfile_read_address_b = b1100;              //main central led configuration round 3
+        asel = b00;                                  //uses read a
+        bsel = b00;                                   //read b
+        we_regfile = 1;
+        regfile_write_address = b0001;                     //temp reg
+        game_fsm.d = game_fsm.ROUND_IDLE;   
+      
+      game_fsm.SET_ROUND_PATTERN_4:
+        alufn = b000000;                              //ADD
+        regfile_read_address_a = b0001;              //temp register 2 to hold value for current round pattern, and route to main screen LED
+        regfile_read_address_b = b1101;              //main central led configuration round 4
+        asel = b00;                                  //uses read a
+        bsel = b00;                                   //read b
+        we_regfile = 1;
+        regfile_write_address = b0001;                     //temp reg
+        game_fsm.d = game_fsm.ROUND_IDLE;
+      
+      game_fsm.SET_ROUND_PATTERN_5:
+        alufn = b000000;                              //ADD
+        regfile_read_address_a = b0001;              //temp register 2 to hold value for current round pattern, and route to main screen LED
+        regfile_read_address_b = b1111;              //main central led configuration round 5
+        asel = b00;                                  //uses read a
+        bsel = b00;                                   //read b
+        we_regfile = 1;
+        regfile_write_address = b0001;                     //temp reg
+        game_fsm.d = game_fsm.ROUND_IDLE;                  
 
       }
     } 
