@@ -1,4 +1,4 @@
-<<<<<<< Updated upstream
+
 module variable_counter 
 #(
 SEED = 128h843233523a613966423b622562592c62: SEED.WIDTH == 128 && SEED[95:0] != 0
@@ -130,5 +130,4 @@ always {
     }
     
   }
->>>>>>> Stashed changes
 }
