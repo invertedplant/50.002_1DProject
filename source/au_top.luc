@@ -182,14 +182,20 @@ module au_top (
     case (gameMachine.p1tempreg[14]){
       0: p1win_led = 0;
       1: p1win_led = 1;
+      default:
+        p1win_led = 0;
       }
     case (gameMachine.p2tempreg[14]){
       0: p2win_led = 0;
       1: p2win_led = 1;
+      default:
+        p1win_led = 0;
      }
     case (gameMachine.p1tempreg[15]){
       0: p1win_led = 0;
       1: p2win_led = someBlinker.blink;
+      default:
+        p1win_led = 0;
     }
     
      
