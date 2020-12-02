@@ -19,7 +19,9 @@ module game_regfiles (
     output main_pattern[9],
     output p1_score[16],
     output p2_score[16],
-    output counter_out[16]
+    output counter_out[16],
+    output tempregfile_1[16],
+    output tempregfile_2[16]
 
   ) 
 
@@ -127,6 +129,8 @@ module game_regfiles (
     counter_out = register_round_counter.q;
     p1_score = register_p1_score.q;
     p2_score = register_p2_score.q;
+    tempregfile_1 = register_temp1.q;
+    tempregfile_2 = register_temp2.q;
     
     
     case(register_round_counter.q){

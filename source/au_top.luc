@@ -36,6 +36,7 @@ module au_top (
     .rst(rst){
       multi_seven_seg seg; //might use the 7seg display, see how first l0l
       game_betacpu gameMachine;
+      blinker someBlinker;
       
     }
     edge_detector edge_dt_btn_p1_0 (#RISE(1), #FALL(0));
@@ -157,6 +158,8 @@ module au_top (
       seg.values[3] = h4;
       b101:
       seg.values[3] = h5;
+      default:
+      seg.values[3] = he;
       }
     case (gameMachine.p2_score){
       b000:
@@ -171,11 +174,23 @@ module au_top (
       seg.values[0] = h4;
       b101:
       seg.values[0] = h5;
+      default:
+      seg.values[0] = he;
       }
   
-    
-    
-    
+    // show p1/p2 win on LEDs
+    case (gameMachine.p1tempreg[14]){
+      0: p1win_led = 0;
+      1: p1win_led = 1;
+      }
+    case (gameMachine.p2tempreg[14]){
+      0: p2win_led = 0;
+      1: p2win_led = 1;
+     }
+    case (gameMachine.p1tempreg[15]){
+      0: p1win_led = 0;
+      1: p2win_led = someBlinker.blink;
+    }
     
      
     
