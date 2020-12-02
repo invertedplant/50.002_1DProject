@@ -4,8 +4,9 @@ module blinker (
     output blink // this is what goes to the LED
   ) {
 
-  //create a dff called counter that is 25 bits wide
+  //create a dff called counter that is 24 bits wide
   // must connect clk and should connect rst
+
   dff counter[24](.clk(clk), .rst(rst));
   // if we wanted to reset to a nen-zero value we can do (#INIT(100), .clk(clk), .rst(rst))
   // you could also connect rst to nothing if you wanted no reset
@@ -17,3 +18,4 @@ module blinker (
     // count frequency based on 2^24 cycles / 100M clock cycles per second
   }
 }
+
