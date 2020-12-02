@@ -83,31 +83,31 @@ module au_top (
     btn_cond_p1_0.in = p1button[0];
     edge_dt_btn_p1_0.in = btn_cond_p1_0.out;
     
-    btn_cond_p1_1.in = p1button[0];
+    btn_cond_p1_1.in = p1button[1];
     edge_dt_btn_p1_1.in = btn_cond_p1_1.out;
     
-    btn_cond_p1_2.in = p1button[0];
+    btn_cond_p1_2.in = p1button[2];
     edge_dt_btn_p1_2.in = btn_cond_p1_2.out;
     
-    btn_cond_p1_3.in = p1button[0];
+    btn_cond_p1_3.in = p1button[3];
     edge_dt_btn_p1_3.in = btn_cond_p1_3.out;
     
-    btn_cond_p1_4.in = p1button[0];
+    btn_cond_p1_4.in = p1button[4];
     edge_dt_btn_p1_4.in = btn_cond_p1_4.out;
     
     btn_cond_p2_0.in = p2button[0];
     edge_dt_btn_p2_0.in = btn_cond_p2_0.out;
     
-    btn_cond_p2_1.in = p2button[0];
+    btn_cond_p2_1.in = p2button[1];
     edge_dt_btn_p2_1.in = btn_cond_p2_1.out;
     
-    btn_cond_p2_2.in = p2button[0];
+    btn_cond_p2_2.in = p2button[2];
     edge_dt_btn_p2_2.in = btn_cond_p2_2.out;
     
-    btn_cond_p2_3.in = p2button[0];
+    btn_cond_p2_3.in = p2button[3];
     edge_dt_btn_p2_3.in = btn_cond_p2_3.out;
     
-    btn_cond_p2_4.in = p2button[0];
+    btn_cond_p2_4.in = p2button[4];
     edge_dt_btn_p2_4.in = btn_cond_p2_4.out;
     
     btn_cond_panik.in = panik;
