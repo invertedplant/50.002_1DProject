@@ -7,7 +7,7 @@ module game_painting_main (
     
     input p1_button[5],
     input p2_button[5],
-    input reset_button,
+    input reset_button[1],
     
     output alufn[6],
     output asel[3],
@@ -73,7 +73,6 @@ module game_painting_main (
       P2_GET_POINT,
       BRANCH_GAMEFINISH,
       ADD_ROUND_COUNTER,
-      START,
       
       BRANCH_NEXTROUND,
       
@@ -122,7 +121,7 @@ module game_painting_main (
     //decimal_counter_rst = 0;
     
     if (rst){
-        game_fsm.d = game_fsm.START;
+        game_fsm.d = game_fsm.RESET_ROUND_COUNTER;
         //decimal_counter_rst = 1;
     }
     else{
