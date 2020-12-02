@@ -1,6 +1,7 @@
 module game_betacpu (
     input p1_button[5],
     input p2_button[5],
+    input panik,
     
     input clk,  // clock
     input rst,  // reset
@@ -15,10 +16,10 @@ module game_betacpu (
     output main_pattern[9],
     output round_counter[16],
     output debug_slowclock,
-    output debug_vcclock,
+    output debug_vcclock
    
-    output decimal_counter_increase,
-    output decimal_counter_rst
+    //output decimal_counter_increase,
+    //output decimal_counter_rst
   ) {
   
   //temp variables
@@ -53,10 +54,11 @@ module game_betacpu (
     //pass button press signal to CU unit
     game_controlunit.p1_button = p1_button;
     game_controlunit.p2_button = p2_button;
+    game_controlunit.reset_button = panik;
     
     //output of CU to increase 7segment
-    decimal_counter_increase = game_controlunit.decimal_counter_increase;
-    decimal_counter_rst = game_controlunit.decimal_counter_rst;
+    //decimal_counter_increase = game_controlunit.decimal_counter_increase;
+    //decimal_counter_rst = game_controlunit.decimal_counter_rst;
     
     //Setup REGFILE unit 
     players.we = game_controlunit.we_regfile;

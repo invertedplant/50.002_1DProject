@@ -48,6 +48,7 @@ module au_top (
     edge_detector edge_dt_btn_p2_2 (#RISE(1), #FALL(0));
     edge_detector edge_dt_btn_p2_3 (#RISE(1), #FALL(0));
     edge_detector edge_dt_btn_p2_4 (#RISE(1), #FALL(0));
+    edge_detector edge_dt_panik (#RISE(1), #FALL(0)); 
 
     button_conditioner btn_cond_p1_0;
     button_conditioner btn_cond_p1_1;
@@ -59,6 +60,7 @@ module au_top (
     button_conditioner btn_cond_p2_2;
     button_conditioner btn_cond_p2_3;
     button_conditioner btn_cond_p2_4;
+    button_conditioner btn_cond_panik;
   }
   
   
@@ -107,6 +109,9 @@ module au_top (
     btn_cond_p2_4.in = p2button[0];
     edge_dt_btn_p2_4.in = btn_cond_p2_4.out;
     
+    btn_cond_panik.in = panik;
+    edge_dt_panik.in = btn_cond_panik.out;
+    
     gameMachine.p1_button[0] = edge_dt_btn_p1_0.out;
     gameMachine.p1_button[1] = edge_dt_btn_p1_1.out;
     gameMachine.p1_button[2] = edge_dt_btn_p1_2.out;
@@ -118,6 +123,8 @@ module au_top (
     gameMachine.p2_button[2] = edge_dt_btn_p2_2.out;
     gameMachine.p2_button[3] = edge_dt_btn_p2_3.out;
     gameMachine.p2_button[4] = edge_dt_btn_p2_4.out;
+    
+    gameMachine.panik = edge_dt_panik.out;
     
     // send the internal game states to the LEDs
     p1pattern = gameMachine.p1_pattern;
