@@ -178,20 +178,61 @@ module game_painting_main (
           
       game_fsm.P1_MOVE_POS:
         //TODO: change move_pos to shifting
-        alufn = b000000; //ADD
         regfile_read_address_a = b1000; //Register for p1 cursor position
-        asel = b00;
-        regfile_read_address_b = b0001; //read from the temporary register to know what movement it is
-        we_regfile = 1;
-        regfile_write_address = b1000;
-        if(regfile_datain[0]){
-          bsel = b001;
-        }else if(regfile_datain[1]){
-          bsel = b010;
-        }else if(regfile_datain[2]){
-          bsel = b011;
-        }else if(regfile_datain[3]){
-          bsel = b100;
+        regfile_read_address_b = b1000; //p1 cursor position
+        if(p1_button[1]||p1_button[3]){ //if right or down
+          alufn = b101100; //Shift left
+          if(p1_button[1]){ //if right
+             if(regfile_datain[8]!= 1){//if the MSB is not 1 means can still move right
+                bsel = 001; //the +1 or move right
+                we_regfile = 1;
+                regfile_write_address = b1000; //writes back to p1 cursor position
+              }
+              else if(regfile_datain[8]==1){
+                bsel = 110; //shift left by zero 0 
+                we_regfile = 1;
+                regfile_write_address = b1000; //writes back to p1 cursor position
+              }
+            }
+          else if(p1_button[3]){ //if down  
+             if(|regfile_datain[8:6]!= 1){//if the MSB is not 1 means can still move down
+                bsel = 011; //the +3 or move down
+                we_regfile = 1;
+                regfile_write_address = b1000; //writes back to p1 cursor position
+              }
+              else{
+                bsel = 110; //shift left by zero 0 
+                we_regfile = 1;
+                regfile_write_address = b1000; //writes back to p1 cursor position
+            }
+           }
+          }
+        else if(p1_button[0]||p1_button[2]){ //if left or up
+          alufn = b101101; //Shift Right
+          if(p1_button[0]){ //if left
+             if(regfile_datain[0]!= 1){//if the MSB is not 1 means can still move right
+                bsel = 010; //the -1 or move left
+                we_regfile = 1;
+                regfile_write_address = b1000; //writes back to p1 cursor position
+              }
+              else if(regfile_datain[0]==1){
+                bsel = 110; //shift right by zero 0 
+                we_regfile = 1;
+                regfile_write_address = b1000; //writes back to p1 cursor position
+              }
+            }
+          else if(p1_button[2]){ //if up 
+             if(|regfile_datain[2:0]!= 1){//if the MSB is not 1 means can still move down
+                bsel = 100; //the -3 or move up
+                we_regfile = 1;
+                regfile_write_address = b1000; //writes back to p1 cursor position
+              }
+              else{
+                bsel = 110; //shift right by zero 0 
+                we_regfile = 1;
+                regfile_write_address = b1000; //writes back to p1 cursor position
+            }
+          }
         }
         game_fsm.d = game_fsm.ROUND_IDLE;
           
