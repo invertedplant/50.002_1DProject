@@ -50,8 +50,8 @@ module game_painting_main (
       
       BRANCH_P1_PATTERN_MATCH,
       
-      
-      STOP_P1_TIME,
+      LIGHT_P1_LED,
+     
       
       CHECK_P2_PATTERN_MATCH,
       
@@ -63,7 +63,7 @@ module game_painting_main (
       
       BRANCH_P2_PATTERN_MATCH,
       
-      STOP_P2_TIME,
+      LIGHT_P2_LED,
       
       CHECK_GAMEFINISH,
       CHECK_FINAL_WINNER,
@@ -210,7 +210,7 @@ module game_painting_main (
           alufn = b101101; //Shift Right
           if(p1_button[0]){ //if left
              if(regfile_datain[0]!= 1){//if the MSB is not 1 means can still move right
-                bsel = 010; //the -1 or move left
+                bsel = 001; //the -1 or move left
                 we_regfile = 1;
                 regfile_write_address = b1000; //writes back to p1 cursor position
               }
@@ -222,7 +222,7 @@ module game_painting_main (
             }
           else if(p1_button[2]){ //if up 
              if(|regfile_datain[2:0]!= 1){//if the MSB is not 1 means can still move down
-                bsel = 100; //the -3 or move up
+                bsel = 011; //the -3 or move up
                 we_regfile = 1;
                 regfile_write_address = b1000; //writes back to p1 cursor position
               }
@@ -306,7 +306,7 @@ module game_painting_main (
           alufn = b101101; //Shift Right
           if(p2_button[0]){ //if left
              if(regfile_datain[0]!= 1){//if the MSB is not 1 means can still move right
-                bsel = 010; //the -1 or move left
+                bsel = 001; //the -1 or move left
                 we_regfile = 1;
                 regfile_write_address = b1001; //writes back to p2 cursor position
               }
@@ -318,7 +318,7 @@ module game_painting_main (
             }
           else if(p2_button[2]){ //if up 
              if(|regfile_datain[2:0]!= 1){//if the MSB is not 1 means can still move down
-                bsel = 100; //the -3 or move up
+                bsel = 011; //the -3 or move up
                 we_regfile = 1;
                 regfile_write_address = b1001; //writes back to p2 cursor position
               }
@@ -469,15 +469,6 @@ module game_painting_main (
             game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
         }
           
-      //maybe stop player 1 time
-      game_fsm.STOP_P1_TIME:    //If content of P1 TIME is 1 means P1 has finished his or her pattern
-        alufn = b000000;                              //CMPEQ
-        regfile_read_address_a = b0000;              //p1 time register
-        asel = b00;                                  //uses read a
-        bsel = b001;                                   //read b
-        we_regfile = 1;
-        regfile_write_address = b0000;                     //temp reg
-        game_fsm.d = game_fsm.CHECK_ROUND_WINNER;
           
       //-----------------------------------------------------------------------------------------------------------------------------------
       game_fsm.CHECK_P2_PATTERN_MATCH: //general case that branches to specific pattern based on rounds
@@ -592,15 +583,6 @@ module game_painting_main (
             game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
         }
           
-      //maybe stop player 1 time (maybe delete this)
-      game_fsm.STOP_P2_TIME:    //If content of P2 TIME is 1 means P2 has finished his or her pattern
-        alufn = b000000;                              //CMPEQ
-        regfile_read_address_a = b0001;              //p2 time register
-        asel = b00;                                  //uses read a
-        bsel = b001;                                   //read b
-        we_regfile = 1;
-        regfile_write_address = b0001;                     //temp reg
-        game_fsm.d = game_fsm.CHECK_ROUND_WINNER; 
           
       //---------------------------------------------------------------------------------------------------------------------------------------
           
@@ -732,9 +714,23 @@ module game_painting_main (
          if(reset_button){
             game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
          }else{
-          game_fsm.d = game_fsm.CHECK_GAMEFINISH;
+          game_fsm.d = game_fsm.LIGHT_P1_LED;
           }
-          
+      
+      //LIGHT P1 LED VIA SOME WONKY METHOD
+      game_fsm.LIGHT_P1_LED:
+        alufn = b000000; //add 
+        regfile_read_address_a = b0000;
+        asel = b00;
+        bsel = b011; // large number woo
+        we_regfile = 1;
+        regfile_write_address = b0000; // temp regfile   
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+         }else{
+          game_fsm.d = game_fsm.CHECK_GAMEFINISH;
+          }              
+              
       //increases P2 score
       game_fsm.INCREASE_P2SCORE:
         //set output and next state 
@@ -747,9 +743,24 @@ module game_painting_main (
         if(reset_button){
             game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
         }else{
-          game_fsm.d = game_fsm.CHECK_GAMEFINISH;
+          game_fsm.d = game_fsm.LIGHT_P2_LED;
           }  
+      
+      //LIGHT P2 LED VIA SOME WONKY METHOD
+      game_fsm.LIGHT_P2_LED:
+        alufn = b000000; //add 
+        regfile_read_address_a = b0001;
+        asel = b00;
+        bsel = b011; // large number woo
+        we_regfile = 1;
+        regfile_write_address = b0001; // temp regfile   
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+         }else{
+          game_fsm.d = game_fsm.CHECK_GAMEFINISH;
+          } 
           
+              
       //--------------------------------------------------------------------------------------------------------------------------------------------
           
           
@@ -899,23 +910,11 @@ module game_painting_main (
         }else{
         game_fsm.d = game_fsm.ROUND_IDLE;}     
       
-      game_fsm.SET_ROUND_PATTERN_3:
-        alufn = b000000;                              //ADD
-        regfile_read_address_a = b0001;              //temp register 2 to hold value for current round pattern, and route to main screen LED
-        regfile_read_address_b = b1100;              //main central led configuration round 3
-        asel = b00;                                  //uses read a
-        bsel = b00;                                   //read b
-        we_regfile = 1;
-        regfile_write_address = b0001;                     //temp reg
-        if(reset_button){
-            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
-        }else{
-        game_fsm.d = game_fsm.ROUND_IDLE;}  
       
       game_fsm.SET_ROUND_PATTERN_4:
         alufn = b000000;                              //ADD
         regfile_read_address_a = b0001;              //temp register 2 to hold value for current round pattern, and route to main screen LED
-        regfile_read_address_b = b1101;              //main central led configuration round 4
+        regfile_read_address_b = b1100;              //main central led configuration round 4
         asel = b00;                                  //uses read a
         bsel = b00;                                   //read b
         we_regfile = 1;
@@ -928,7 +927,7 @@ module game_painting_main (
       game_fsm.SET_ROUND_PATTERN_5:
         alufn = b000000;                              //ADD
         regfile_read_address_a = b0001;              //temp register 2 to hold value for current round pattern, and route to main screen LED
-        regfile_read_address_b = b1111;              //main central led configuration round 5
+        regfile_read_address_b = b1101;              //main central led configuration round 5
         asel = b00;                                  //uses read a
         bsel = b00;                                   //read b
         we_regfile = 1;

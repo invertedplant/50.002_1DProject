@@ -15,6 +15,8 @@ module game_betacpu (
     output p2_score[16],
     output main_pattern[9],
     output round_counter[16],
+    output p1tempreg[16],
+    output p2tempreg[16],
     output debug_slowclock,
     output debug_vcclock
    
@@ -73,7 +75,7 @@ module game_betacpu (
     //asel mux
     case(game_controlunit.asel){
       b00  : inputAlu_a = players.out_a;
-      b01  : inputAlu_a = players.out_a; // You can't do this, you have to assign the round counter register to an output of the regfile, probably out_b
+      b01  : inputAlu_a = players.out_a; // Dependencies...
       b10 : inputAlu_a = 30;
       b11 : inputAlu_a = 0;
       default : //b10 unused
@@ -85,8 +87,8 @@ module game_betacpu (
       b000 : inputAlu_b = players.out_b;
       b001 : inputAlu_b = 1; //right
       b010 : inputAlu_b = 3; //up
-      b011 : inputAlu_b = -1; //left
-      b100 : inputAlu_b = -3; //down
+      b011 : inputAlu_b = b0100000000000000; //big ass number
+      b100 : inputAlu_b = b1000000000000000; //large ass number
       b101 : inputAlu_b = 5; //constant 5
       b110 : inputAlu_b = 0; //constant 0
       default: //necessary to init
@@ -120,6 +122,8 @@ module game_betacpu (
     p2_pos = players.all_pos[8:0];
     p1_pattern = players.all_patterns[17:9];
     p2_pattern = players.all_patterns[8:0];
+    p1tempreg = players.tempregfile_1;
+    p2tempreg = players.tempregfile_2;
     main_pattern = players.main_pattern;
     p1_score = players.p1_score;
     p2_score = players.p2_score;
