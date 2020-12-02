@@ -16,8 +16,6 @@ module game_painting_main (
     output regfile_read_address_a[4],
     output regfile_read_address_b[4],
     output we_regfile,
-    output decimal_counter_increase,
-    output decimal_counter_rst,
     output debug[4]
     //output winning_lights[2],
     //TODO: at the correct states, modify these output values
@@ -83,6 +81,8 @@ module game_painting_main (
       RESET_BOARD_TIME,
       RESET_BOARD,
       RESET_BOARD_2,
+      RESET_TEMP_REG,
+      RESET_TEMP_REG2,
       
       P1_ON_BUTTON_PRESS,
       P1_MOVE_POS,
@@ -116,12 +116,12 @@ module game_painting_main (
     
     debug = b0000;
     
-    decimal_counter_increase = 0;
-    decimal_counter_rst = 0;
+    //decimal_counter_increase = 0;
+    //decimal_counter_rst = 0;
     
     if (rst){
         game_fsm.d = game_fsm.START_SET_TIMER;
-        decimal_counter_rst = 1;
+        //decimal_counter_rst = 1;
     }
     else{
       
@@ -177,7 +177,7 @@ module game_painting_main (
         }
           
       game_fsm.P1_MOVE_POS:
-        //TODO: change move_pos to shifting
+        //change move_pos to shifting
         regfile_read_address_a = b1000; //Register for p1 cursor position
         regfile_read_address_b = b1000; //p1 cursor position
         if(p1_button[1]||p1_button[3]){ //if right or down
@@ -541,17 +541,25 @@ module game_painting_main (
         alu_out_sel = b11;                       //wdsel constant 0
         we_regfile = 1;
         regfile_write_address = b0100;                 //P1 board register
-        decimal_counter_rst = 1;
-        decimal_counter_increase = 0;
         game_fsm.d = game_fsm.RESET_BOARD_2; 
           
      game_fsm.RESET_BOARD_2:
         alu_out_sel = b11;                       //wdsel constant 0
         we_regfile = 1;
         regfile_write_address = b0101;                 //P2 board register
-        decimal_counter_rst = 1;
-        decimal_counter_increase = 0;
-        game_fsm.d = game_fsm.ROUND_IDLE; 
+        game_fsm.d = game_fsm.RESET_TEMP_REG; 
+          
+     game_fsm.RESET_TEMP_REG:  //sets temp register to 0 again
+        alu_out_sel = b11;                       //wdsel constant 0
+        we_regfile = 1;
+        regfile_write_address = b0000;                 //1st temp reg
+        game_fsm.d = game_fsm.RESET_TEMP_REG2;
+          
+      game_fsm.RESET_TEMP_REG2:  //sets temp register to 0 again
+        alu_out_sel = b11;                       //wdsel constant 0
+        we_regfile = 1;
+        regfile_write_address = b0001;                 //2nd temp reg
+        game_fsm.d = game_fsm.ROUND_IDLE;  
           
      
       
