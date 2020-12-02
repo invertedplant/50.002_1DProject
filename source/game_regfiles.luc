@@ -14,9 +14,11 @@ module game_regfiles (
     
     //debug
     //output out[16],
-    output all_time[32],
-    output all_scores[32],
-    output all_buttons[4],
+    output all_pos[18],
+    output all_patterns[18],
+    output main_pattern[9],
+    output p1_score[16],
+    output p2_score[16],
     output counter_out[16]
 
   ) 
@@ -117,13 +119,25 @@ module game_regfiles (
       
     
     
-    //For debugging
-    all_scores[15:0] = register_p1_score.q;
-    all_scores[31:16] = register_p2_score.q;
-    all_buttons[1:0] = register_p1_buttonPress.q[1:0];
-    all_buttons[3:2] = register_p2_buttonPress.q[1:0];
-    all_time[15:0] = register_temp1.q;
-    all_time[31:16] = register_temp2.q;
+    //For external displays
+    all_pos[17:9] = register_p1_cursor_pos.q;
+    all_pos[8:0] = register_p2_cursor_pos.q;
+    all_patterns[17:9] = register_p1_led_pattern.q;
+    all_patterns[8:0] = register_p2_led_pattern.q;
     counter_out = register_round_counter.q;
+    p1_score = register_p1_score.q;
+    p2_score = register_p2_score.q;
+    
+    
+    case(register_round_counter.q){
+      1: main_pattern = register_central_led_pattern.q;
+      2: main_pattern = register_central_led_pattern2.q;
+      3: main_pattern = register_central_led_pattern3.q;
+      4: main_pattern = register_central_led_pattern4.q;
+      5: main_pattern = register_central_led_pattern5.q;
+      default:
+        main_pattern = 9b0;
+    }
+    
   }
 }

@@ -12,15 +12,17 @@ module au_top (
     input io_dip [24],     // DIP switches on IO Shield
     */ //I don't think we're using these 
     // our custom inputs go here
-    input p1button[5],
-    input p2button[5],
+    input p1button[5], //external p1 buttons
+    input p2button[5], //external p2 buttons
+    input panik,
     output p1win_led,
     output p2win_led,
     output p1pattern[9],
+    output p2pattern[9],
     output p1pos[9],
     output p2pos[9],
-    output p2pattern[9],
-    output pattern[9]
+    output round_counter[5],
+    output mainpattern[9]
     /* these values are a little different from normal as we're using a self-modified version of io.acf*/
   ) {
   
@@ -32,34 +34,33 @@ module au_top (
     reset_conditioner reset_cond;
     
     .rst(rst){
-      //initialise all the dffs needed to store values
-      dff register_a[16];
-      dff register_b[16];
-      dff register_alufn[6];
-      dff register_result[16];
-      dff register_z;
-      dff register_v;
-      dff register_n;
-      //For automatic mode
-      dff register_correct[16];
-      dff register_status[8];
-      dff counter[29];
-      dff case_state[4](#INIT(0));
+      multi_seven_seg seg; //might use the 7seg display, see how first l0l
+      game_betacpu gameMachine;
       
-      //TODO: initialise the FSM and all states needed to run the game
-      //fsm statemachine = {};
-      
-      multi_seven_seg seg;  
     }
+    edge_detector edge_dt_btn_p1_0 (#RISE(1), #FALL(0));
+    edge_detector edge_dt_btn_p1_1 (#RISE(1), #FALL(0));
+    edge_detector edge_dt_btn_p1_2 (#RISE(1), #FALL(0));
+    edge_detector edge_dt_btn_p1_3 (#RISE(1), #FALL(0));
+    edge_detector edge_dt_btn_p1_4 (#RISE(1), #FALL(0));
+    edge_detector edge_dt_btn_p2_0 (#RISE(1), #FALL(0));
+    edge_detector edge_dt_btn_p2_1 (#RISE(1), #FALL(0));
+    edge_detector edge_dt_btn_p2_2 (#RISE(1), #FALL(0));
+    edge_detector edge_dt_btn_p2_3 (#RISE(1), #FALL(0));
+    edge_detector edge_dt_btn_p2_4 (#RISE(1), #FALL(0));
+
+    button_conditioner btn_cond_p1_0;
+    button_conditioner btn_cond_p1_1;
+    button_conditioner btn_cond_p1_2;
+    button_conditioner btn_cond_p1_3;
+    button_conditioner btn_cond_p1_4;
+    button_conditioner btn_cond_p2_0;
+    button_conditioner btn_cond_p2_1;
+    button_conditioner btn_cond_p2_2;
+    button_conditioner btn_cond_p2_3;
+    button_conditioner btn_cond_p2_4;
   }
   
-  alu alutop; // instantiate our alu
-  const TIMER = 28;
-  
-  sig a[16]; // instantiate all other top-level stuff
-  sig b[16];
-  sig alu[16];
-  sig alufn[6];
   
   always {
     reset_cond.in = ~rst_n; // input raw inverted reset signal
@@ -68,31 +69,107 @@ module au_top (
     usb_tx = usb_rx;        // loop serial port
     
     p1win_led = 0;
-    p2win_led = 0; // initialise p1 and p2 winning LEDs
-    
-    pattern = 9b0; // initialise the winning pattern TODO: put in the first pattern
-    p1pos = b000000001; // initialise player 1 and player 2 pos to top-left
-    p2pos = b000000001;
-    
-    p1pattern = 9b0; //all OFF
-    p2pattern = 9b0;
-    
+    p2win_led = 0; // initialise p1 and p2 winning LEDs   
     
     io_seg = 8hff;          // turn segments off
     io_sel = 4hf;           // select no digits
-    
     seg.values = {8hf, 8hf, 8hf, 8hf}; // 7 seg display initialised but shows nothing
-    
-    a = 16b0; //instantiate values
-    b = 16b0;
     io_seg = ~seg.seg;
     io_sel = ~seg.sel;
+    
+    btn_cond_p1_0.in = p1button[0];
+    edge_dt_btn_p1_0.in = btn_cond_p1_0.out;
+    
+    btn_cond_p1_1.in = p1button[0];
+    edge_dt_btn_p1_1.in = btn_cond_p1_1.out;
+    
+    btn_cond_p1_2.in = p1button[0];
+    edge_dt_btn_p1_2.in = btn_cond_p1_2.out;
+    
+    btn_cond_p1_3.in = p1button[0];
+    edge_dt_btn_p1_3.in = btn_cond_p1_3.out;
+    
+    btn_cond_p1_4.in = p1button[0];
+    edge_dt_btn_p1_4.in = btn_cond_p1_4.out;
+    
+    btn_cond_p2_0.in = p2button[0];
+    edge_dt_btn_p2_0.in = btn_cond_p2_0.out;
+    
+    btn_cond_p2_1.in = p2button[0];
+    edge_dt_btn_p2_1.in = btn_cond_p2_1.out;
+    
+    btn_cond_p2_2.in = p2button[0];
+    edge_dt_btn_p2_2.in = btn_cond_p2_2.out;
+    
+    btn_cond_p2_3.in = p2button[0];
+    edge_dt_btn_p2_3.in = btn_cond_p2_3.out;
+    
+    btn_cond_p2_4.in = p2button[0];
+    edge_dt_btn_p2_4.in = btn_cond_p2_4.out;
+    
+    gameMachine.p1_button[0] = edge_dt_btn_p1_0.out;
+    gameMachine.p1_button[1] = edge_dt_btn_p1_1.out;
+    gameMachine.p1_button[2] = edge_dt_btn_p1_2.out;
+    gameMachine.p1_button[3] = edge_dt_btn_p1_3.out;
+    gameMachine.p1_button[4] = edge_dt_btn_p1_4.out;
+    
+    gameMachine.p2_button[0] = edge_dt_btn_p2_0.out;
+    gameMachine.p2_button[1] = edge_dt_btn_p2_1.out;
+    gameMachine.p2_button[2] = edge_dt_btn_p2_2.out;
+    gameMachine.p2_button[3] = edge_dt_btn_p2_3.out;
+    gameMachine.p2_button[4] = edge_dt_btn_p2_4.out;
+    
+    // send the internal game states to the LEDs
+    p1pattern = gameMachine.p1_pattern;
+    p2pattern = gameMachine.p2_pattern;
+    p1pos = gameMachine.p1_pos;
+    p2pos = gameMachine.p2_pos;
+    mainpattern = gameMachine.main_pattern;
+    case (gameMachine.round_counter){
+      0: round_counter = 00000;
+      1: round_counter = 00001;
+      2: round_counter = 00011;
+      3: round_counter = 00111;
+      4: round_counter = 01111;
+      5: round_counter = 11111;
+      default:
+      round_counter = 11111;
+      } 
+    
+    //show scores and round counter on Alchitry 7SEG display
+    case (gameMachine.p1_score){
+      b000:
+      seg.values[3] = h0;
+      b001:
+      seg.values[3] = h1;
+      b010:
+      seg.values[3] = h2;
+      b011:
+      seg.values[3] = h3;
+      b100:
+      seg.values[3] = h4;
+      b101:
+      seg.values[3] = h5;
+      }
+    case (gameMachine.p2_score){
+      b000:
+      seg.values[0] = h0;
+      b001:
+      seg.values[0] = h1;
+      b010:
+      seg.values[0] = h2;
+      b011:
+      seg.values[0] = h3;
+      b100:
+      seg.values[0] = h4;
+      b101:
+      seg.values[0] = h5;
+      }
   
-    alutop.a = a;
-    alutop.b = b;
-    alufn = 6b0;
-    alutop.alufn = alufn;
-    alu = alutop.result; // bind the result of alutop to alu
+    
+    
+    
+    
      
     
 }

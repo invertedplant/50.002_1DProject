@@ -124,8 +124,8 @@ module game_painting_main (
     //decimal_counter_rst = 0;
     
     if (rst){
-        game_fsm.d = game_fsm.START_SET_TIMER;
-        //decimal_counter_rst = 1;
+        game_fsm.d = game_fsm.START;
+        decimal_counter_rst = 1;
     }
     else{
       
@@ -520,6 +520,7 @@ module game_painting_main (
         if(reset_button){
             game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
         }
+
       //OURS:CHECK P2 PATTERN MATCH ROUND 1
       game_fsm.CHECK_P2_PATTERN_MATCH_1:
         alufn = b110011;                              //CMPEQ
@@ -636,6 +637,7 @@ module game_painting_main (
             game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
           }else{
           game_fsm.d = game_fsm.BRANCH_GAMEFINISH;}
+
        //after this state go to check winner state
           
           

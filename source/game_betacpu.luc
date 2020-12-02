@@ -6,8 +6,14 @@ module game_betacpu (
     input rst,  // reset
     
     //output debug_out[16], //uncomment when doing debugging
-    output p1_out[16],
-    output p2_out[16],
+    output p1_pos[9],
+    output p2_pos[9],
+    output p1_pattern[9],
+    output p2_pattern[9],
+    output p1_score[16],
+    output p2_score[16],
+    output main_pattern[9],
+    output round_counter[16],
     output debug_slowclock,
     output debug_vcclock,
    
@@ -107,8 +113,16 @@ module game_betacpu (
   //  debug_out = game_controlunit.debug;
   // debug_out = players.out;
     
-    p1_out = players.all_scores[15:0];
-    p2_out = players.all_scores[31:16];
+    // connecting regfiles to direct ports
+    p1_pos = players.all_pos[17:9];
+    p2_pos = players.all_pos[8:0];
+    p1_pattern = players.all_patterns[17:9];
+    p2_pattern = players.all_patterns[8:0];
+    main_pattern = players.main_pattern;
+    p1_score = players.p1_score;
+    p2_score = players.p2_score;
+    round_counter = players.counter_out;
+    
     debug_slowclock = slow_timer.value;
     debug_vcclock = vc.out;
  
