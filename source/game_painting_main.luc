@@ -7,6 +7,7 @@ module game_painting_main (
     
     input p1_button[5],
     input p2_button[5],
+    input reset_button,
     
     output alufn[6],
     output asel[3],
@@ -16,8 +17,6 @@ module game_painting_main (
     output regfile_read_address_a[4],
     output regfile_read_address_b[4],
     output we_regfile,
-    output decimal_counter_increase,
-    output decimal_counter_rst,
     output debug[4]
     //output winning_lights[2],
     //TODO: at the correct states, modify these output values
@@ -83,6 +82,11 @@ module game_painting_main (
       RESET_BOARD_TIME,
       RESET_BOARD,
       RESET_BOARD_2,
+      RESET_TEMP_REG,
+      RESET_TEMP_REG2,
+      RESET_SCORE_1,
+      RESET_SCORE_2,
+      RESET_ROUND_COUNTER,
       
       P1_ON_BUTTON_PRESS,
       P1_MOVE_POS,
@@ -116,8 +120,8 @@ module game_painting_main (
     
     debug = b0000;
     
-    decimal_counter_increase = 0;
-    decimal_counter_rst = 0;
+    //decimal_counter_increase = 0;
+    //decimal_counter_rst = 0;
     
     if (rst){
         game_fsm.d = game_fsm.START;
@@ -147,7 +151,11 @@ module game_painting_main (
           bsel = b001; //bsel = output of bsel mux is the constant 1, which is also used to shift right
           we_regfile = 1;
           regfile_write_address = b0111; //write back to round counter register
+          if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+          }else{
           game_fsm.d = game_fsm.CHECK_WHICH_ROUND; //go to current round
+          }
       
       //OURS:    
       game_fsm.ROUND_IDLE: //loops through the whole round checking until a trigger button is pressed, many states loops back to this state
@@ -156,6 +164,9 @@ module game_painting_main (
         }
         else if (p2_button && ~p1_button){
             game_fsm.d = game_fsm.P2_ON_BUTTON_PRESS; //checks if player 2 pattern matches
+        }
+        else if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
         }
         else{
             game_fsm.d = game_fsm.ROUND_IDLE;
@@ -170,30 +181,79 @@ module game_painting_main (
         bsel = b110; //bsel that is zero value 
         we_regfile = 1;
         regfile_write_address = b0001; //write to temp register
-        if(p1_button[4]){
-          game_fsm.d = game_fsm.P1_PAINT;
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
         }else{
-        game_fsm.d = game_fsm.P1_MOVE_POS; //move position state
-        }
-          
+          if(p1_button[4]){
+            game_fsm.d = game_fsm.P1_PAINT;
+          }else{
+          game_fsm.d = game_fsm.P1_MOVE_POS; //move position state
+          }
+        }    
+        
       game_fsm.P1_MOVE_POS:
-        //TODO: change move_pos to shifting
-        alufn = b000000; //ADD
+        //change move_pos to shifting
         regfile_read_address_a = b1000; //Register for p1 cursor position
-        asel = b00;
-        regfile_read_address_b = b0001; //read from the temporary register to know what movement it is
-        we_regfile = 1;
-        regfile_write_address = b1000;
-        if(regfile_datain[0]){
-          bsel = b001;
-        }else if(regfile_datain[1]){
-          bsel = b010;
-        }else if(regfile_datain[2]){
-          bsel = b011;
-        }else if(regfile_datain[3]){
-          bsel = b100;
+        regfile_read_address_b = b1000; //p1 cursor position
+        if(p1_button[1]||p1_button[3]){ //if right or down
+          alufn = b101100; //Shift left
+          if(p1_button[1]){ //if right
+             if(regfile_datain[8]!= 1){//if the MSB is not 1 means can still move right
+                bsel = 001; //the +1 or move right
+                we_regfile = 1;
+                regfile_write_address = b1000; //writes back to p1 cursor position
+              }
+              else if(regfile_datain[8]==1){
+                bsel = 110; //shift left by zero 0 
+                we_regfile = 1;
+                regfile_write_address = b1000; //writes back to p1 cursor position
+              }
+            }
+          else if(p1_button[3]){ //if down  
+             if(|regfile_datain[8:6]!= 1){//if the MSB is not 1 means can still move down
+                bsel = 011; //the +3 or move down
+                we_regfile = 1;
+                regfile_write_address = b1000; //writes back to p1 cursor position
+              }
+              else{
+                bsel = 110; //shift left by zero 0 
+                we_regfile = 1;
+                regfile_write_address = b1000; //writes back to p1 cursor position
+            }
+           }
+          }
+        else if(p1_button[0]||p1_button[2]){ //if left or up
+          alufn = b101101; //Shift Right
+          if(p1_button[0]){ //if left
+             if(regfile_datain[0]!= 1){//if the MSB is not 1 means can still move right
+                bsel = 010; //the -1 or move left
+                we_regfile = 1;
+                regfile_write_address = b1000; //writes back to p1 cursor position
+              }
+              else if(regfile_datain[0]==1){
+                bsel = 110; //shift right by zero 0 
+                we_regfile = 1;
+                regfile_write_address = b1000; //writes back to p1 cursor position
+              }
+            }
+          else if(p1_button[2]){ //if up 
+             if(|regfile_datain[2:0]!= 1){//if the MSB is not 1 means can still move down
+                bsel = 100; //the -3 or move up
+                we_regfile = 1;
+                regfile_write_address = b1000; //writes back to p1 cursor position
+              }
+              else{
+                bsel = 110; //shift right by zero 0 
+                we_regfile = 1;
+                regfile_write_address = b1000; //writes back to p1 cursor position
+            }
+          }
         }
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
         game_fsm.d = game_fsm.ROUND_IDLE;
+        }
           
         game_fsm.P1_PAINT:
           alufn = b010010;//XOR function
@@ -203,7 +263,11 @@ module game_painting_main (
           bsel = b000;
           we_regfile = 1;
           regfile_write_address = b0100; //p1 pattern
-          game_fsm.d = game_fsm.CHECK_P1_PATTERN_MATCH;
+          if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+          }else{
+            game_fsm.d = game_fsm.CHECK_P1_PATTERN_MATCH;
+          }
           
       //---------------------------------------------------------------------------------------------------------------------------------
       //BUTTON PRESSES FOR EACH PLAYER
@@ -219,24 +283,73 @@ module game_painting_main (
         }else{
         game_fsm.d = game_fsm.P2_MOVE_POS; //move position state
         }
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }
           
       game_fsm.P2_MOVE_POS:
-        alufn = b000000; //ADD
+        //change move_pos to shifting
         regfile_read_address_a = b1001; //Register for p2 cursor position
-        asel = b00;
-        regfile_read_address_b = b0000; //read from the temporary register to know what movement it is
-        we_regfile = 1;
-        regfile_write_address = b1001;
-        if(regfile_datain[0]){
-          bsel = b001;
-        }else if(regfile_datain[1]){
-          bsel = b010;
-        }else if(regfile_datain[2]){
-          bsel = b011;
-        }else if(regfile_datain[3]){
-          bsel = b100;
+        regfile_read_address_b = b1001; //p2 cursor position
+        if(p2_button[1]||p2_button[3]){ //if right or down
+          alufn = b101100; //Shift left
+          if(p2_button[1]){ //if right
+             if(regfile_datain[8]!= 1){//if the MSB is not 1 means can still move right
+                bsel = 001; //the +1 or move right
+                we_regfile = 1;
+                regfile_write_address = b1001; //writes back to p2 cursor position
+              }
+              else if(regfile_datain[8]==1){
+                bsel = 110; //shift left by zero 0 
+                we_regfile = 1;
+                regfile_write_address = b1001; //writes back to p2 cursor position
+              }
+            }
+          else if(p2_button[3]){ //if down  
+             if(|regfile_datain[8:6]!= 1){//if the MSB is not 1 means can still move down
+                bsel = 011; //the +3 or move down
+                we_regfile = 1;
+                regfile_write_address = b1001; //writes back to p2 cursor position
+              }
+              else{
+                bsel = 110; //shift left by zero 0 
+                we_regfile = 1;
+                regfile_write_address = b1001; //writes back to p2 cursor position
+            }
+           }
+          }
+        else if(p2_button[0]||p2_button[2]){ //if left or up
+          alufn = b101101; //Shift Right
+          if(p2_button[0]){ //if left
+             if(regfile_datain[0]!= 1){//if the MSB is not 1 means can still move right
+                bsel = 010; //the -1 or move left
+                we_regfile = 1;
+                regfile_write_address = b1001; //writes back to p2 cursor position
+              }
+              else if(regfile_datain[0]==1){
+                bsel = 110; //shift right by zero 0 
+                we_regfile = 1;
+                regfile_write_address = b1001; //writes back to p2 cursor position
+              }
+            }
+          else if(p2_button[2]){ //if up 
+             if(|regfile_datain[2:0]!= 1){//if the MSB is not 1 means can still move down
+                bsel = 100; //the -3 or move up
+                we_regfile = 1;
+                regfile_write_address = b1001; //writes back to p2 cursor position
+              }
+              else{
+                bsel = 110; //shift right by zero 0 
+                we_regfile = 1;
+                regfile_write_address = b1001; //writes back to p2 cursor position
+            }
+          }
         }
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
         game_fsm.d = game_fsm.ROUND_IDLE;
+        }
           
           
       game_fsm.P2_PAINT:
@@ -247,7 +360,11 @@ module game_painting_main (
           bsel = b000;
           we_regfile = 1;
           regfile_write_address = b0101; //p2 pattern
+          if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+          }else{
           game_fsm.d = game_fsm.CHECK_P2_PATTERN_MATCH;
+          }
         
       //---------------------------------------------------------------------------------------------------------------------------------
         
@@ -273,7 +390,10 @@ module game_painting_main (
           }
           else{
           game_fsm.d = game_fsm.START_SET_TIMER;
-          }
+        }
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }
         
       game_fsm.CHECK_P1_PATTERN_MATCH_1:
         alufn = b110011;                              //CMPEQ
@@ -283,7 +403,11 @@ module game_painting_main (
         bsel = b00;                                   //read b
         we_regfile = 1;
         regfile_write_address = b0000;                     //temp reg
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
         game_fsm.d = game_fsm.BRANCH_P1_PATTERN_MATCH;
+        }
           
           
       //OURS:CHECK P1 PATTERN MATCH ROUND 2
@@ -295,6 +419,9 @@ module game_painting_main (
         bsel = b00;                                   //read b
         we_regfile = 1;
         regfile_write_address = b0000;                      //temp reg
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }
         game_fsm.d = game_fsm.BRANCH_P1_PATTERN_MATCH;
           
           
@@ -307,8 +434,11 @@ module game_painting_main (
         bsel = b00;                                   //read b
         we_regfile = 1;
         regfile_write_address = b0000;                      //temp reg
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
         game_fsm.d = game_fsm.BRANCH_P1_PATTERN_MATCH;
-          
+          }
           
       //OURS:CHECK P1 PATTERN MATCH ROUND 4
       game_fsm.CHECK_P1_PATTERN_MATCH_4:
@@ -319,8 +449,11 @@ module game_painting_main (
         bsel = b00;                                   //read b
         we_regfile = 1;
         regfile_write_address = b0000;                     //temp reg
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{  
         game_fsm.d = game_fsm.BRANCH_P1_PATTERN_MATCH;
-          
+        }
           
       //OURS:CHECK P1 PATTERN MATCH ROUND 5
       game_fsm.CHECK_P1_PATTERN_MATCH_5:
@@ -331,7 +464,11 @@ module game_painting_main (
         bsel = b00;                                   //read b
         we_regfile = 1;
         regfile_write_address = b0000;                      //temp reg
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
         game_fsm.d = game_fsm.BRANCH_P1_PATTERN_MATCH;
+        }
           
           
       //OURS: BRANCH_P1_PATTERN_MATCH, 
@@ -345,6 +482,9 @@ module game_painting_main (
         else{ //if round counter is not 5 yet
           game_fsm.d = game_fsm.ROUND_IDLE;
           }
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }
           
       //maybe stop player 1 time
       game_fsm.STOP_P1_TIME:    //If content of P1 TIME is 1 means P1 has finished his or her pattern
@@ -374,9 +514,13 @@ module game_painting_main (
         else if(regfile_datain==b0101) {
           game_fsm.d = game_fsm.CHECK_P2_PATTERN_MATCH_5; //CHECK FOR ROUND 5
           }
-          else{
+        else{
           game_fsm.d = game_fsm.START;
-          }
+        }
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }
+
       //OURS:CHECK P2 PATTERN MATCH ROUND 1
       game_fsm.CHECK_P2_PATTERN_MATCH_1:
         alufn = b110011;                              //CMPEQ
@@ -386,7 +530,10 @@ module game_painting_main (
         bsel = b00;                                   //read b
         we_regfile = 1;
         regfile_write_address = b0001;                     //temp reg
-        game_fsm.d = game_fsm.BRANCH_P2_PATTERN_MATCH;
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
+        game_fsm.d = game_fsm.BRANCH_P2_PATTERN_MATCH;}
           
           
       //OURS:CHECK P2 PATTERN MATCH ROUND 2
@@ -398,7 +545,10 @@ module game_painting_main (
         bsel = b00;                                   //read b
         we_regfile = 1;
         regfile_write_address = b0001;                      //temp reg
-        game_fsm.d = game_fsm.BRANCH_P2_PATTERN_MATCH;
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
+        game_fsm.d = game_fsm.BRANCH_P2_PATTERN_MATCH;}
           
           
       //OURS:CHECK P2 PATTERN MATCH ROUND 3
@@ -410,7 +560,10 @@ module game_painting_main (
         bsel = b00;                                   //read b
         we_regfile = 1;
         regfile_write_address = b0001;                      //temp reg
-        game_fsm.d = game_fsm.BRANCH_P2_PATTERN_MATCH;
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
+        game_fsm.d = game_fsm.BRANCH_P2_PATTERN_MATCH;}
           
           
       //OURS:CHECK P2 PATTERN MATCH ROUND 4
@@ -422,7 +575,11 @@ module game_painting_main (
         bsel = b00;                                   //read b
         we_regfile = 1;
         regfile_write_address = b0001;                      //temp reg
-        game_fsm.d = game_fsm.BRANCH_P2_PATTERN_MATCH;
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
+          game_fsm.d = game_fsm.BRANCH_P2_PATTERN_MATCH;
+          }
           
           
       //OURS:CHECK P2 PATTERN MATCH ROUND 5
@@ -434,7 +591,10 @@ module game_painting_main (
         bsel = b00;                                   //read b
         we_regfile = 1;
         regfile_write_address = b0001;                     //temp reg
-        game_fsm.d = game_fsm.BRANCH_P2_PATTERN_MATCH;
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
+          game_fsm.d = game_fsm.BRANCH_P2_PATTERN_MATCH;}
           
           
       game_fsm.BRANCH_P2_PATTERN_MATCH:
@@ -447,6 +607,9 @@ module game_painting_main (
         else{ //if round counter is not 5 yet
           game_fsm.d = game_fsm.ROUND_IDLE;
           }
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }
           
       //maybe stop player 1 time (maybe delete this)
       game_fsm.STOP_P2_TIME:    //If content of P2 TIME is 1 means P2 has finished his or her pattern
@@ -470,7 +633,11 @@ module game_painting_main (
           bsel = b101; //bsel = output of bsel mux is the constant 5
           we_regfile = 1;
           regfile_write_address = b0000; //temp regfile_datain
-          game_fsm.d = game_fsm.BRANCH_GAMEFINISH;
+          if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+          }else{
+          game_fsm.d = game_fsm.BRANCH_GAMEFINISH;}
+
        //after this state go to check winner state
           
           
@@ -484,6 +651,9 @@ module game_painting_main (
         else{ //if round counter is not 5 yet
           game_fsm.d = game_fsm.ADD_ROUND_COUNTER;
           }
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }
           
       //OURS: Add round counter, THEN ADD 1 TO CURRENT ROUND COUNTER, then prepare for next round
       game_fsm.ADD_ROUND_COUNTER:
@@ -493,29 +663,57 @@ module game_painting_main (
           bsel = b001; //bsel = output of bsel mux is the constant 1, which is also used to shift right
           we_regfile = 1;
           regfile_write_address = b0111; //write back to round counter register
+          if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+          }else{
           game_fsm.d = game_fsm.RESET_BOARD; //check who is the round winner
+          }
           
           
      game_fsm.RESET_BOARD:
         alu_out_sel = b11;                       //wdsel constant 0
         we_regfile = 1;
         regfile_write_address = b0100;                 //P1 board register
-        decimal_counter_rst = 1;
-        decimal_counter_increase = 0;
         game_fsm.d = game_fsm.RESET_BOARD_2; 
           
      game_fsm.RESET_BOARD_2:
         alu_out_sel = b11;                       //wdsel constant 0
         we_regfile = 1;
         regfile_write_address = b0101;                 //P2 board register
-        decimal_counter_rst = 1;
-        decimal_counter_increase = 0;
-        game_fsm.d = game_fsm.ROUND_IDLE; 
+        game_fsm.d = game_fsm.RESET_TEMP_REG; 
+          
+     game_fsm.RESET_TEMP_REG:  //sets temp register to 0 again
+        alu_out_sel = b11;                       //wdsel constant 0
+        we_regfile = 1;
+        regfile_write_address = b0000;                 //1st temp reg
+        game_fsm.d = game_fsm.RESET_TEMP_REG2;
+          
+      game_fsm.RESET_TEMP_REG2:  //sets temp register to 0 again
+        alu_out_sel = b11;                       //wdsel constant 0
+        we_regfile = 1;
+        regfile_write_address = b0001;                 //2nd temp reg
+        game_fsm.d = game_fsm.ROUND_IDLE;  
           
      
       
       //TODO: add a set of full reset states when a reset button is pressed, wipes p1 p2 boards & scores and sets round counter back to zero
+      game_fsm.RESET_ROUND_COUNTER:  //sets round counter register to 0 when reset button pressed
+        alu_out_sel = b11;                       //wdsel constant 0
+        we_regfile = 1;
+        regfile_write_address = b0111;                 //round counter register
+        game_fsm.d = game_fsm.RESET_SCORE_1; 
           
+      game_fsm.RESET_SCORE_1:  //sets p1 score to 0 when reset button pressed
+        alu_out_sel = b11;                       //wdsel constant 0
+        we_regfile = 1;
+        regfile_write_address = b0010;                 //p1 score register
+        game_fsm.d = game_fsm.RESET_SCORE_2;  
+          
+      game_fsm.RESET_SCORE_2:  //sets p2 score to 0 when reset button pressed
+        alu_out_sel = b11;                       //wdsel constant 0
+        we_regfile = 1;
+        regfile_write_address = b0011;                 //p2 score register
+        game_fsm.d = game_fsm.RESET_BOARD;  
           
       //OURS: RESET_BOARD_TIME, to reset after each round ends and after adding scores
           
@@ -553,7 +751,11 @@ module game_painting_main (
          bsel = b001;                                //B = 1
          we_regfile = 1;                           
          regfile_write_address = b0010;                   //place back to P1 score reg
-         game_fsm.d = game_fsm.CHECK_GAMEFINISH;
+         if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+         }else{
+          game_fsm.d = game_fsm.CHECK_GAMEFINISH;
+          }
           
       //increases P2 score
       game_fsm.INCREASE_P2SCORE:
@@ -564,7 +766,11 @@ module game_painting_main (
         bsel = b001;                               //B = 1
         we_regfile = 1; 
         regfile_write_address = b0001;                 //place back tot P2 score reg
-        game_fsm.d = game_fsm.CHECK_GAMEFINISH;  
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
+          game_fsm.d = game_fsm.CHECK_GAMEFINISH;
+          }  
           
       //--------------------------------------------------------------------------------------------------------------------------------------------
           
@@ -578,7 +784,11 @@ module game_painting_main (
         bsel = b000; //b
         we_regfile = 1;
         regfile_write_address = b0001;         //temp reg
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
         game_fsm.d = game_fsm.BRANCH_WINNER;
+          }
           
           
       //BRANCH TO THE CORRECT WINNER
@@ -592,6 +802,9 @@ module game_painting_main (
             //P1 Wins
             game_fsm.d = game_fsm.P1WINS; 
           }
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }
         
           
       //P2 WINS STATE
@@ -630,6 +843,9 @@ module game_painting_main (
       game_fsm.GAMEOVER:
         debug = b1111;
         game_fsm.d = game_fsm.GAMEOVER;
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }
         //make sure to add a reset check for this state alongside all other states           
         
           
@@ -656,6 +872,9 @@ module game_painting_main (
           else{
           game_fsm.d = game_fsm.START;
           }
+          if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }
       
       //Set central main LED for round 1
       game_fsm.SET_ROUND_PATTERN_1:
@@ -666,7 +885,10 @@ module game_painting_main (
         bsel = b00;                                   //read b
         we_regfile = 1;
         regfile_write_address = b0001;                     //temp reg
-        game_fsm.d = game_fsm.ROUND_IDLE;       
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
+        game_fsm.d = game_fsm.ROUND_IDLE;}      
       
       game_fsm.SET_ROUND_PATTERN_2:
         alufn = b000000;                              //ADD
@@ -676,7 +898,10 @@ module game_painting_main (
         bsel = b00;                                   //read b
         we_regfile = 1;
         regfile_write_address = b0001;                     //temp reg
-        game_fsm.d = game_fsm.ROUND_IDLE;
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
+        game_fsm.d = game_fsm.ROUND_IDLE;}  
       
       game_fsm.SET_ROUND_PATTERN_3:
         alufn = b000000;                              //ADD
@@ -686,7 +911,10 @@ module game_painting_main (
         bsel = b00;                                   //read b
         we_regfile = 1;
         regfile_write_address = b0001;                     //temp reg
-        game_fsm.d = game_fsm.ROUND_IDLE;   
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
+        game_fsm.d = game_fsm.ROUND_IDLE;}     
       
       game_fsm.SET_ROUND_PATTERN_3:
         alufn = b000000;                              //ADD
@@ -696,7 +924,10 @@ module game_painting_main (
         bsel = b00;                                   //read b
         we_regfile = 1;
         regfile_write_address = b0001;                     //temp reg
-        game_fsm.d = game_fsm.ROUND_IDLE;   
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
+        game_fsm.d = game_fsm.ROUND_IDLE;}  
       
       game_fsm.SET_ROUND_PATTERN_4:
         alufn = b000000;                              //ADD
@@ -706,7 +937,10 @@ module game_painting_main (
         bsel = b00;                                   //read b
         we_regfile = 1;
         regfile_write_address = b0001;                     //temp reg
-        game_fsm.d = game_fsm.ROUND_IDLE;
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
+        game_fsm.d = game_fsm.ROUND_IDLE;}  
       
       game_fsm.SET_ROUND_PATTERN_5:
         alufn = b000000;                              //ADD
@@ -716,7 +950,10 @@ module game_painting_main (
         bsel = b00;                                   //read b
         we_regfile = 1;
         regfile_write_address = b0001;                     //temp reg
-        game_fsm.d = game_fsm.ROUND_IDLE;                  
+        if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+        }else{
+        game_fsm.d = game_fsm.ROUND_IDLE;}                    
 
       }
     } 
