@@ -1,13 +1,19 @@
 module game_betacpu (
-    input p1_button,
-    input p2_button,
+    input p1_button[5],
+    input p2_button[5],
     
     input clk,  // clock
     input rst,  // reset
     
     //output debug_out[16], //uncomment when doing debugging
-    output p1_out[16],
-    output p2_out[16],
+    output p1_pos[9],
+    output p2_pos[9],
+    output p1_pattern[9],
+    output p2_pattern[9],
+    output p1_score[16],
+    output p2_score[16],
+    output main_pattern[9],
+    output round_counter[16],
     output debug_slowclock,
     output debug_vcclock,
    
@@ -22,8 +28,8 @@ module game_betacpu (
   alu game_alu;
 
   .clk(clk){
-    edge_detector edge_detector_variableCounter (#RISE(1), #FALL(0));
-    edge_detector game_timer_detector(#RISE(1), #FALL(0));
+    //edge_detector edge_detector_variableCounter (#RISE(1), #FALL(0));
+    //edge_detector game_timer_detector(#RISE(1), #FALL(0));
     
     .rst(rst){
       game_painting_main game_controlunit; //the control unit for the game is in the painting main module
@@ -37,12 +43,12 @@ module game_betacpu (
   always {
     
     //edge detectors
-    game_timer_detector.in = slow_timer.value; // 30 second timer detector
-    edge_detector_variableCounter.in = vc.out; // random counter increase signal 
+    //game_timer_detector.in = slow_timer.value; // 30 second timer detector
+    //edge_detector_variableCounter.in = vc.out; // random counter increase signal 
     
     //pass timer and counter signals to CU unit 
-    game_controlunit.increase_counter = edge_detector_variableCounter.out;
-    game_controlunit.decrease_timer = game_timer_detector.out;
+    //game_controlunit.increase_counter = edge_detector_variableCounter.out;
+    //game_controlunit.decrease_timer = game_timer_detector.out;
     
     //pass button press signal to CU unit
     game_controlunit.p1_button = p1_button;
@@ -65,7 +71,7 @@ module game_betacpu (
     //asel mux
     case(game_controlunit.asel){
       b00  : inputAlu_a = players.out_a;
-      b01  : inputAlu_a = players.register_round_counter.q; // You can't do this, you have to assign the round counter register to an output of the regfile, probably out_b
+      b01  : inputAlu_a = players.out_a; // You can't do this, you have to assign the round counter register to an output of the regfile, probably out_b
       b10 : inputAlu_a = 30;
       b11 : inputAlu_a = 0;
       default : //b10 unused
@@ -95,8 +101,8 @@ module game_betacpu (
     //wdsel mux
     case (game_controlunit.alu_out_sel){
       b01 : players.data = b1111111111111111;
-      b10 : players.data = b0000000000001111;
-      b11 : players.data = 0;
+      b10 : players.data = b0000000000000001;
+      b11 : players.data = 16b0;
       default : //b00
           players.data = game_alu.result; //output from the alufn is routed to port 00
     }
@@ -107,8 +113,16 @@ module game_betacpu (
   //  debug_out = game_controlunit.debug;
   // debug_out = players.out;
     
-    p1_out = players.all_scores[15:0];
-    p2_out = players.all_scores[31:16];
+    // connecting regfiles to direct ports
+    p1_pos = players.all_pos[17:9];
+    p2_pos = players.all_pos[8:0];
+    p1_pattern = players.all_patterns[17:9];
+    p2_pattern = players.all_patterns[8:0];
+    main_pattern = players.main_pattern;
+    p1_score = players.p1_score;
+    p2_score = players.p2_score;
+    round_counter = players.counter_out;
+    
     debug_slowclock = slow_timer.value;
     debug_vcclock = vc.out;
  

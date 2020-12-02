@@ -24,35 +24,37 @@ pin io_seg[7] A20;
 pin usb_rx USB_TX;
 pin usb_tx USB_RX;
 
-//TODO: finish support for BR board I/O.
 //Player 1 INPUT buttons in LRUD + COMMIT order 
-pin p1button[0] A39 pulldown;
-pin p1button[1] A42 pulldown;
-pin p1button[2] A45 pulldown;
-pin p1button[3] A48 pulldown;
-pin p1button[4] A36 pulldown;
+pin p1button[0] B11 pulldown;
+pin p1button[1] B8 pulldown;
+pin p1button[2] B5 pulldown;
+pin p1button[3] B2 pulldown;
+pin p1button[4] B14 pulldown;
 
 //Player 2 INPUT buttons in LRUD + COMMIT order
-pin p2button[0] A40 pulldown;
-pin p2button[1] A43 pulldown;
-pin p2button[2] A46 pulldown;
-pin p2button[3] A49 pulldown;
-pin p2button[4] A37 pulldown;
+pin p2button[0] C12 pulldown;
+pin p2button[1] C9 pulldown;
+pin p2button[2] C6 pulldown;
+pin p2button[3] C3 pulldown;
+pin p2button[4] C15 pulldown;
+
+//PANIK button 
+pin panik[0] C40 pulldown;
 
 //Player 1 and Player 2 OUTPUT win LEDs
-pin p1win_led A33;
-pin p2win_led A34;
+pin p1win_led B39;
+pin p2win_led B40;
 
 //Pre-defined patterns OUTPUT
-pin pattern[0] A27;
-pin pattern[1] A30;
-pin pattern[2] A33;
-pin pattern[3] A28;
-pin pattern[4] A31;
-pin pattern[5] A34;
-pin pattern[6] A24;
-pin pattern[7] A21;
-pin pattern[8] A18;
+pin mainpattern[0] A27;
+pin mainpattern[1] A30;
+pin mainpattern[2] A33;
+pin mainpattern[3] A28;
+pin mainpattern[4] A31;
+pin mainpattern[5] A34;
+pin mainpattern[6] A24;
+pin mainpattern[7] A21;
+pin mainpattern[8] A18;
 
 //Player 1 pos and patterns OUTPUT;
 //This would've been easier on a matrix board tbh. I wouldn't have to write every darn pin manually. At least I'm not the one wiring this.
@@ -99,6 +101,13 @@ pin p2pattern[5] C36;
 pin p2pattern[6] C20;
 pin p2pattern[7] C19;
 pin p2pattern[8] C18;
+
+// pins for round state
+pin round_counter[0] A36;
+pin round_counter[1] A39;
+pin round_counter[2] A42;
+pin round_counter[3] A45;
+pin round_counter[4] A48;
 
 
 
