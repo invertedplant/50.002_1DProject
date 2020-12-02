@@ -21,11 +21,9 @@ module game_painting_main (
     //output winning_lights[2],
     //TODO: at the correct states, modify these output values
   ) {
-  //TODO: check for reset in every state
-  
   .clk(clk){
     fsm game_fsm={      
-      START_SET_TIMER,
+      START,
 
       INCREASE_P1SCORE, 
       
@@ -125,25 +123,11 @@ module game_painting_main (
     
     if (rst){
         game_fsm.d = game_fsm.START;
-        decimal_counter_rst = 1;
+        //decimal_counter_rst = 1;
     }
     else{
       
     case(game_fsm.q){
-      game_fsm.START_SET_TIMER: //sets a timer to allow cooldown on game starts
-        alufn = b000000;                             //ADD
-        asel = b11;                                  //30
-        we_regfile = 1; 
-        regfile_write_address = b0000;                     //timer reg
-        regfile_read_address_b = b0000;              //direct read (temp reg)
-        //if counter is set
-        if (regfile_datain[4]){                      //direct read in
-          game_fsm.d = game_fsm.START;
-        }
-        else{
-          game_fsm.d =  game_fsm.START_SET_TIMER;
-        }
-
       game_fsm.START:
         alufn = b000000; //ADD FUNCTION
           regfile_read_address_a = b0111; //register for round counter 
@@ -389,7 +373,7 @@ module game_painting_main (
           game_fsm.d = game_fsm.CHECK_P1_PATTERN_MATCH_5; //CHECK FOR ROUND 5
           }
           else{
-          game_fsm.d = game_fsm.START_SET_TIMER;
+          game_fsm.d = game_fsm.START;
         }
         if(reset_button){
             game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
@@ -476,7 +460,6 @@ module game_painting_main (
         regfile_read_address_b = b0000;      //temp reg
         if (regfile_datain[0]){ //If it is true that the player 1 pattern matches the current round pattern
           //go to check winner state, the game ends!
-          //TODO: set the register value from 1 back to 0
           game_fsm.d = game_fsm.INCREASE_P1SCORE; //adds 1 to player 1 timer register to indicate p1 has finished first
           }
         else{ //if round counter is not 5 yet
@@ -520,7 +503,6 @@ module game_painting_main (
         if(reset_button){
             game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
         }
-
       //OURS:CHECK P2 PATTERN MATCH ROUND 1
       game_fsm.CHECK_P2_PATTERN_MATCH_1:
         alufn = b110011;                              //CMPEQ
@@ -601,7 +583,6 @@ module game_painting_main (
         regfile_read_address_b = b0001;      //temp reg
         if (regfile_datain[0]){ //If it is true that the player 1 pattern matches the current round pattern
           //go to check winner state, the game ends!
-          //TODO: set regfile 0001 value back to 0 IF they win
           game_fsm.d = game_fsm.INCREASE_P2SCORE; //adds 1 to player 2 timer register to indicate p2 has finished first
           }
         else{ //if round counter is not 5 yet
@@ -637,7 +618,6 @@ module game_painting_main (
             game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
           }else{
           game_fsm.d = game_fsm.BRANCH_GAMEFINISH;}
-
        //after this state go to check winner state
           
           
@@ -695,8 +675,6 @@ module game_painting_main (
         game_fsm.d = game_fsm.ROUND_IDLE;  
           
      
-      
-      //TODO: add a set of full reset states when a reset button is pressed, wipes p1 p2 boards & scores and sets round counter back to zero
       game_fsm.RESET_ROUND_COUNTER:  //sets round counter register to 0 when reset button pressed
         alu_out_sel = b11;                       //wdsel constant 0
         we_regfile = 1;
@@ -815,17 +793,21 @@ module game_painting_main (
          we_regfile = 1;
          regfile_write_address = b0001;     //2nd temp reg
          alu_out_sel = b01;           //P2 winning signal
-         game_fsm.d = game_fsm.GAMEOVER; 
-          
-          
+         if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+         }else{
+         game_fsm.d = game_fsm.GAMEOVER;}
      
           
        //P1 WINS STATE
       game_fsm.P1WINS:
          we_regfile = 1;
-         regfile_write_address = b0000;     //2nd temp reg
-         alu_out_sel = b01;           //P1 winning signal
-         game_fsm.d = game_fsm.GAMEOVER; 
+         regfile_write_address = b0000;     //1st temp reg
+         alu_out_sel = b01;           //P1 winning signal, all 16 bits 1 signal
+         if(reset_button){
+            game_fsm.d = game_fsm.RESET_ROUND_COUNTER; //resets player 1 score followed by a sequence of resets
+         }else{
+         game_fsm.d = game_fsm.GAMEOVER;}
  
       /*game_fsm.P1LOSE:
          we_regfile = 1;
