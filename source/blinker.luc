@@ -1,0 +1,36 @@
+module blinker (
+    input clk,  // clock
+    input rst,  // reset
+    output blink // this is what goes to the LED
+  ) {
+
+  //create a dff called counter that is 25 bits wide
+  // must connect clk and should connect rst
+  dff counter[25](.clk(clk), .rst(rst));
+  // if we wanted to reset to a nen-zero value we can do (#INIT(100), .clk(clk), .rst(rst))
+  // you could also connect rst to nothing if you wanted no reset
+  
+  always {
+    blink = counter.q[24]; // sets the blinker val = MSB of counter
+    counter.d = counter.q + 1; // adds one to the counter
+    // LED blinks half the time as MSB is 1 half the time
+    // count frequency based on 2^25 cycles / 100M clock cycles per second
+  }
+}
+
+/*
+  other ways to make multiple connections
+   .clk(clk), .rst(rst){
+     dff counter1[12];
+     dff counter2[4];
+   }
+   or 
+    .clk(clk){
+       dff counter1[14];
+         .rst(rst) {
+             dff counter2[17];
+         }
+     }
+   
+   
+*/

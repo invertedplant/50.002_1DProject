@@ -15,6 +15,7 @@
     <component>counter.luc</component>
     <src>debouncer.luc</src>
     <component>pn_gen.luc</component>
+    <src>blinker.luc</src>
     <src>boolean.luc</src>
     <src>seven_seg.luc</src>
     <component>decoder.luc</component>

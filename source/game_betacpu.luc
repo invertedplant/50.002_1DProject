@@ -1,7 +1,7 @@
 module game_betacpu (
     input p1_button[5],
     input p2_button[5],
-    input panik,
+    input panik[1],
     
     input clk,  // clock
     input rst,  // reset

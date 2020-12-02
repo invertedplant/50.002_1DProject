@@ -14,7 +14,7 @@ module au_top (
     // our custom inputs go here
     input p1button[5], //external p1 buttons
     input p2button[5], //external p2 buttons
-    input panik,
+    input panik[1], // external panic buttons
     output p1win_led,
     output p2win_led,
     output p1pattern[9],
