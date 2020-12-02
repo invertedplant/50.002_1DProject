@@ -30,7 +30,7 @@ module game_regfiles (
       dff register_p2_score[16]; //register for player 2 score
       dff register_p1_led_pattern[9]; //register for player 1 led board
       dff register_p2_led_pattern[9]; //register for player 2 led board
-      dff register_central_led_pattern[9]; //register for main central screen
+      dff register_central_led_pattern[9]; //register for main central screen TODO: assign default values
       dff register_round_counter[16];
       dff register_p1_cursor_pos[9];
       dff register_p2_cursor_pos[9];
